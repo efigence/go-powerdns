@@ -11,9 +11,6 @@ type rawQuery struct {
 	p map[string]json.RawMessage
 }
 
-type Query interface {
-	Dump() string
-}
 
 type QueryLookupCB interface {
 	Query(request QueryLookup) (QueryResponse, error)
@@ -40,6 +37,23 @@ func (api Api)ParseRequest(raw string) (Query,error) {
 		return part,err
 	}
 	return nil,err
+}
+
+func (api Api)Parse(raw string) (QueryResponse, error) {
+	var objmap map[string]json.RawMessage
+	var err error
+	err = json.Unmarshal([]byte(raw),&objmap)
+	if string(objmap[`method`]) == "\"lookup\"" {
+		var query QueryLookup
+		err := json.Unmarshal(objmap[`parameters`],&query)
+		if err != nil {
+			var n QueryResponse
+			return n, err
+		}
+		return api.callbacks.Lookup.Query(query)
+	}
+	var n QueryResponse
+	return n, err
 }
 
 type Api struct {

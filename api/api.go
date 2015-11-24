@@ -15,8 +15,22 @@ type Query interface {
 	Dump() string
 }
 
+type QueryLookupCB interface {
+	Query(request QueryLookup) (QueryResponse, error)
+}
 
-func ParseJson(raw string) (Query,error) {
+type QueryListCB interface {
+	Query(request QueryList) (QueryResponse, error)
+}
+
+
+type CallbackList struct {
+	Lookup QueryLookupCB
+//	List QueryListCB
+}
+
+
+func (api Api)ParseRequest(raw string) (Query,error) {
 	var objmap map[string]json.RawMessage
 	var err error
 	err = json.Unmarshal([]byte(raw),&objmap)
@@ -28,10 +42,25 @@ func ParseJson(raw string) (Query,error) {
 	return nil,err
 }
 
+type Api struct {
+	callbacks CallbackList
+}
+
+func New(c CallbackList) (Api, error) {
+	var api Api
+	api.callbacks = c
+	var err error
+	return api, err
+}
+
+
+
+
+
 // API calls
 // https://doc.powerdns.com/md/authoritative/backend-remote/ for full docs
 
-
+// Lookup call. Required for any plugin
 type QueryLookup struct {
 	QType string `json:"qtype"`
 	QName string `json:"qname"`
@@ -40,6 +69,7 @@ type QueryLookup struct {
 	RealRemote string `json:"real-remote"` // optional
 	ZoneId int `json:"zone-id"`
 }
+
 
 type QueryList struct {
 	ZoneName string `json:"zonename"`

@@ -23,27 +23,21 @@ type QueryListCB interface {
 
 type CallbackList struct {
 	Lookup QueryLookupCB
-//	List QueryListCB
+	List QueryListCB
 }
 
-
-func (api Api)ParseRequest(raw string) (Query,error) {
-	var objmap map[string]json.RawMessage
-	var err error
-	err = json.Unmarshal([]byte(raw),&objmap)
-	if string(objmap[`method`]) == "\"lookup\"" {
-		var part QueryLookup
-		err := json.Unmarshal(objmap[`parameters`],&part)
-		return part,err
-	}
-	return nil,err
-}
 
 func (api Api)Parse(raw string) (QueryResponse, error) {
-	var objmap map[string]json.RawMessage
 	var err error
+	// parse "first level" of json to get type of query
+	var objmap map[string]json.RawMessage
 	err = json.Unmarshal([]byte(raw),&objmap)
-	if string(objmap[`method`]) == "\"lookup\"" {
+	if err != nil {
+		var n QueryResponse
+		return n, err
+	}
+	switch string(objmap[`method`]) {
+	case `"lookup"`:
 		var query QueryLookup
 		err := json.Unmarshal(objmap[`parameters`],&query)
 		if err != nil {
@@ -51,9 +45,19 @@ func (api Api)Parse(raw string) (QueryResponse, error) {
 			return n, err
 		}
 		return api.callbacks.Lookup.Query(query)
+	case `"list"`:
+		var query QueryList
+		err := json.Unmarshal(objmap[`parameters`],&query)
+		if err != nil {
+			var n QueryResponse
+			return n, err
+		}
+		return api.callbacks.List.Query(query)
+	case `"initialize"`:
+		return ResponseOk(), err
+	default:
+		return ResponseFailed(), err
 	}
-	var n QueryResponse
-	return n, err
 }
 
 type Api struct {
@@ -87,7 +91,7 @@ type QueryLookup struct {
 
 type QueryList struct {
 	ZoneName string `json:"zonename"`
-	DomainId string `json:"domain_id"` // optional
+	DomainId int `json:"domain_id"` // optional
 }
 
 func (data QueryLookup) Dump() string {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/XANi/go-powerdns/api"
 	"github.com/op/go-logging"
 	"os"
 	"strings"
@@ -21,5 +22,7 @@ func main() {
 	if !strings.ContainsRune(version, '-') {
 		log.Warning("once you tag your commit with name your version number will be prettier")
 	}
+	_, _ = api.New(api.CallbackList{})
+
 	log.Error("now add some code!")
 }

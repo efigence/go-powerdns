@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/efigence/go-powerdns/api"
 	"github.com/efigence/go-powerdns/webapi"
+	//	"github.com/efigence/go-powerdns/backend/yamldb"
 	"github.com/op/go-logging"
 	"github.com/zenazn/goji"
 	//	"github.com/zenazn/goji/web"
@@ -37,6 +38,7 @@ func main() {
 
 	webApp := webapi.New()
 	goji.Get("/dns", webApp.Dns)
+	goji.Post("/dns", webApp.Dns)
 	goji.Get("/isItWorking", webApp.Healthcheck)
 
 	_, _ = api.New(api.CallbackList{})

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/XANi/go-powerdns/api"
+	"github.com/efigence/go-powerdns/api"
 	"github.com/op/go-logging"
 	"os"
 	"strings"

@@ -1,0 +1,42 @@
+network_vlan:
+    PUBLIC_INTERNET:
+        gw:  1.2.3.1
+        comment: |
+            VLAN connected with our ISP's router
+        host:
+            isp-gw:
+                ip: 1.2.3.1
+            core-r-vrrp:
+                ip: 1.2.3.2
+                comment: "VRRP IP shared between routers"
+            core-r1:
+                ip: 1.2.3.3
+                vip: core-r-vrrp
+            core-r2:
+                ip: 1.2.3.4
+                vip: core-r-vrrp
+        network: 1.2.3.0/29
+        vid: 1234
+    MGMT-BLADES:
+        gw: 172.20.20.65
+        host:
+            mgmt-core:
+                ip: 172.20.20.65
+            bc7mm:
+                ip: 172.20.20.66
+            bc7esm1:
+                ip: 172.20.20.67
+            bc7esm2:
+                ip: 172.20.20.68
+            bc7fcs1:
+                ip: 172.20.20.69
+            bc7fcs2:
+                ip: 172.20.20.70
+            blade203:
+                ip: 172.20.20.93
+                vip: mgmt-core
+            blade204:
+                ip: 172.20.20.94
+                vip: mgmt-core
+        network: 172.20.20.64/27
+        vid: 222

@@ -11,6 +11,26 @@ type DNSRecord struct{
 	AuthString string`json:"auth,omitempty"`
 }
 
+// sortable list of records, used usually as response
+type DNSRecordList []DNSRecord
+
+
+// sort helper
+func (slice DNSRecordList) Len() int {
+	return len(slice)
+}
+
+// sort helper
+func (slice DNSRecordList) Less(a, b int) bool {
+	return ( slice[a].QName +slice[a].Content + slice[a].QType ) < ( slice[b].QName +slice[b].Content + slice[b].QType );
+}
+
+// sort helper
+func (slice DNSRecordList) Swap(a, b int) {
+	slice[a], slice[b] = slice[b], slice[a]
+}
+
+
 
 // Domain + SOA data
 
@@ -32,6 +52,6 @@ type DNSDomain struct {
 type DomainBackend interface {
 	AddDomain(domain DNSDomain) error
 	AddRecord(domain string, record DNSRecord) error
-	Search(q QueryLookup) ([]DNSRecord, error)
-	List(q QueryList) ([]DNSRecord, error)
+	Search(q QueryLookup) (DNSRecordList, error)
+	List(q QueryList) (DNSRecordList, error)
 }

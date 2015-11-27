@@ -10,16 +10,15 @@ func asdf() {
 
 func New() api.DomainBackend {
 	var v YAMLDomains
-	v.DomainRecords = make(map[string]map[string][]api.DNSRecord)
+	v.DomainRecords = make(map[string]map[string]api.DNSRecordList)
 	v.Domains = make(map[string]api.DNSDomain)
 	return &v
 }
 
 type YAMLDomains struct {
-	DomainRecords map[string]map[string][]api.DNSRecord
+	DomainRecords map[string]map[string]api.DNSRecordList
 	Domains       map[string]api.DNSDomain
 }
-
 
 // add domain to DB
 func (d *YAMLDomains) AddDomain(api.DNSDomain) error {
@@ -34,14 +33,14 @@ func (d *YAMLDomains) AddRecord(domain string, record api.DNSRecord) error {
 }
 
 // return records for query
-func (d *YAMLDomains) Search(api.QueryLookup) ([]api.DNSRecord, error) {
+func (d *YAMLDomains) Search(api.QueryLookup) (api.DNSRecordList, error) {
 	var err error
 	r := make([]api.DNSRecord, 0)
 	return r, err
 }
 
 // return all records for domain (For AXFR-type requests)
-func (d *YAMLDomains) List(api.QueryList) ([]api.DNSRecord, error) {
+func (d *YAMLDomains) List(api.QueryList) (api.DNSRecordList, error) {
 	var err error
 	r := make([]api.DNSRecord, 0)
 	return r, err

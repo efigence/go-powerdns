@@ -2,17 +2,24 @@ package yamldb
 
 import (
 	"github.com/efigence/go-powerdns/api"
+	"os"
+
 )
 
 func asdf() {
 	_, _ = api.New(api.CallbackList{})
 }
 
-func New() api.DomainBackend {
+func New(file string) (api.DomainBackend, error) {
 	var v YAMLDomains
+	data, err := os.Open(file)
+	if err != nil {
+		return &v, err
+	}
+	v.ParseDNS(data)
 	v.DomainRecords = make(map[string]map[string]api.DNSRecordList)
 	v.Domains = make(map[string]api.DNSDomain)
-	return &v
+	return &v, err
 }
 
 type YAMLDomains struct {

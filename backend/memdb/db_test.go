@@ -1,4 +1,4 @@
-package yamldb
+package memdb
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
@@ -38,6 +38,7 @@ func TestRecordInsert(t *testing.T) {
 		So(err,ShouldEqual,nil)
 	})
 	Convey("Record insert", t, func() {
+
 		So(backend.AddRecord("example.com", testRecords["wildcard"]), ShouldEqual, nil)
 		So(backend.AddRecord("example.com", testRecords["www"]), ShouldEqual, nil)
 		So(backend.AddRecord("example.com", testRecords["zone"]), ShouldEqual, nil)

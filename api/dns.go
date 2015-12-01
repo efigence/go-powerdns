@@ -45,6 +45,9 @@ type DNSDomain struct {
 	Retry int32
 	Nxdomain int32
 }
+func (d *DNSDomain)UpdateSerial() {
+	d.Serial += 1 // Yes, overflow is completely fine here,
+}
 
 
 // interface for backend

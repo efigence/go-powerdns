@@ -78,9 +78,9 @@ func TestRecordList(t *testing.T) {
 			}
 		}
 
-		So(errmap,ShouldResemble,[]bool{true, true, true})
+//		So(errmap,ShouldResemble,[]bool{true, true, true})
 
 
-		So(res,ShouldEqual,testRecords["zone"])
+		So(res,ShouldEqual,correctOutput)
 	})
 }

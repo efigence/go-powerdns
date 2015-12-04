@@ -1,5 +1,9 @@
 package api
 
+import (
+	"strings"
+)
+
 // Single DNS record structure
 type DNSRecord struct{
 	QType string `json:"qtype"`
@@ -57,4 +61,19 @@ type DomainBackend interface {
 	AddRecord(domain string, record DNSRecord) error
 	Search(q QueryLookup) (DNSRecordList, error)
 	List(q QueryList) (DNSRecordList, error)
+}
+
+
+// generate array of domains from subdomain, specific -> generic
+//
+func ExpandDNSName (name string) ([]string, error) {
+	var s []string
+	var err error
+
+	parts:= strings.Split(name,`.`)
+	for i := 0; i < len(parts);i++ {
+		s = append(s, strings.Join(parts[i:],`.`))
+	}
+	return s, err
+
 }

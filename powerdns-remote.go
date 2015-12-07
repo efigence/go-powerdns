@@ -32,7 +32,6 @@ func main() {
 		cfg.ListenAddr = "127.0.0.1:63636"
 	}
 	flag.Set("bind", cfg.ListenAddr)
-
 	log.Info("Starting app")
 	log.Debug("version: %s", version)
 
@@ -40,7 +39,7 @@ func main() {
 	goji.Get("/dns", webApp.Dns)
 	goji.Post("/dns", webApp.Dns)
 	goji.Get("/isItWorking", webApp.Healthcheck)
-
+	goji.
 	_, _ = api.New(api.CallbackList{})
 
 	goji.Serve()

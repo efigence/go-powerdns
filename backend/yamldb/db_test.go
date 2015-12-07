@@ -45,7 +45,7 @@ func TestRecordInsert(t *testing.T) {
 			QType: "A",
 			QName: "www.example.com",
 		}
-		res, err := backend.Search(q)
+		res, err := backend.Lookup(q)
 		So(err,ShouldEqual,nil)
 		So(res,ShouldResemble,api.DNSRecordList{testRecords["www"]})
 	})
@@ -61,7 +61,7 @@ func TestRecordList(t *testing.T) {
 			QType: "A",
 			QName: "www.example.com",
 		}
-		res, err := backend.Search(q)
+		res, err := backend.Lookup(q)
 		So(err,ShouldEqual,nil)
 		// ShouldContain craps itself on structs, work around it
 		correctOutput := api.DNSRecordList{ testRecords["wildcard"],testRecords["www"],testRecords["zone"] }

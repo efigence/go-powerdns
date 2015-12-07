@@ -33,17 +33,17 @@ func (d *MemDomains) AddDomain(domain api.DNSDomain) error {
 // add records to DB
 func (d *MemDomains) AddRecord(domain string, record api.DNSRecord) error {
 	var err error
-	if (d.DomainRecords[domain] == nil) {
-		d.DomainRecords[domain] = make(map[string]api.DNSRecordList)
+	if (d.DomainRecords[record.QName] == nil) {
+		d.DomainRecords[record.QName] = make(map[string]api.DNSRecordList)
 	}
-	d.DomainRecords[domain][record.QName] = append(d.DomainRecords[domain][record.QName], record)
+	d.DomainRecords[record.QName][record.QType] = append(d.DomainRecords[record.QName][record.QType], record)
 	return err
 }
 
 // return records for query
-func (d *MemDomains) Search(query api.QueryLookup) (api.DNSRecordList, error) {
+func (d *MemDomains) Lookup(query api.QueryLookup) (api.DNSRecordList, error) {
 	var err error
-	return d.DomainRecords[`example.com`][query.QName],err
+	return d.DomainRecords[query.QName][query.QType],err
 }
 
 // return all records for domain (For AXFR-type requests)

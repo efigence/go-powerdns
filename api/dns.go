@@ -59,7 +59,7 @@ func (d *DNSDomain)UpdateSerial() {
 type DomainBackend interface {
 	AddDomain(domain DNSDomain) error
 	AddRecord(domain string, record DNSRecord) error
-	Search(q QueryLookup) (DNSRecordList, error)
+	Lookup(q QueryLookup) (DNSRecordList, error)
 	List(q QueryList) (DNSRecordList, error)
 }
 

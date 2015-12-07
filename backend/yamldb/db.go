@@ -40,7 +40,7 @@ func (d *YAMLDomains) AddRecord(domain string, record api.DNSRecord) error {
 }
 
 // return records for query
-func (d *YAMLDomains) Search(api.QueryLookup) (api.DNSRecordList, error) {
+func (d *YAMLDomains) Lookup(api.QueryLookup) (api.DNSRecordList, error) {
 	var err error
 	r := make([]api.DNSRecord, 0)
 	return r, err

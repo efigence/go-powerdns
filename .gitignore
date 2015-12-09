@@ -17,7 +17,6 @@ TAGS
 *.o
 *.a
 *.so
-.env.sh
 
 # various output files
 *.out

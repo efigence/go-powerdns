@@ -2,6 +2,9 @@ package ipredir
 
 import (
 	"github.com/efigence/go-powerdns/api"
+	"strings"
+	"fmt"
+	"errors"
 	//	"gopkg.in/mem.v2"
 
 )
@@ -10,45 +13,79 @@ func asdf() {
 	_, _ = api.New(api.CallbackList{})
 }
 
-func New(file string) (api.DomainBackend, error) {
+func New(file string) (IpRedirBackend, error) {
 	var v ipredirDomains
 	var err error
-	v.DomainRecords = make(map[string]map[string]api.DNSRecordList)
-	v.Domains = make(map[string]api.DNSDomain)
+	v.redirMap = make(map[string]string)
 	return &v, err
 }
 
+type IpRedirBackend interface {
+	api.DomainBackend
+	RedirIp(string, string) (error)
+}
+
 type ipredirDomains struct {
-	DomainRecords map[string]map[string]api.DNSRecordList
-	Domains       map[string]api.DNSDomain
+	// map of host ip -> target IP redir
+	redirMap map[string]string
 }
 
 // add domain to DB
 func (d *ipredirDomains) AddDomain(domain api.DNSDomain) error {
 	var err error
-	d.Domains[domain.Name] = domain
 	return err
 }
 
 // add records to DB
 func (d *ipredirDomains) AddRecord(domain string, record api.DNSRecord) error {
 	var err error
-	if (d.DomainRecords[record.QName] == nil) {
-		d.DomainRecords[record.QName] = make(map[string]api.DNSRecordList)
-	}
-	d.DomainRecords[record.QName][record.QType] = append(d.DomainRecords[record.QName][record.QType], record)
+
 	return err
 }
 
-// return records for query
+// Returns nil if request should not be redirected and DNS records if it should
 func (d *ipredirDomains) Lookup(query api.QueryLookup) (api.DNSRecordList, error) {
 	var err error
-	return d.DomainRecords[query.QName][query.QType],err
+	if val, ok := d.redirMap[query.Remote]; ok {
+		if query.QType == "SOA" {
+			// pretend we know the domain's root
+			splitDomain, err := api.ExpandDNSName(query.QName)
+			if (err != nil ) {
+				return api.DNSRecordList{}, err
+			}
+			var res api.DNSRecord
+			res.QType = "SOA"
+			if len(splitDomain) > 1 {
+				res.QName = splitDomain[len(splitDomain) - 2]
+				content := []string{
+					"ns1.",
+					res.QName,
+					" hostmaster.",
+					res.QName,
+					" 1",
+					" 10 10 10 10", // TTL 10 on everything
+				}
+				res.Content = strings.Join(content,"")
+				res.Ttl = 10
+				return api.DNSRecordList{res}, err
+			} else { // someone thinks we're root domain.... nope
+				return api.DNSRecordList{}, errors.New(fmt.Sprintf("too short domain #+v, we're not handling root",splitDomain))
+			}
+		} else {
+			var res api.DNSRecord
+			res.QName  = query.QName
+			res.QType  = "A"
+			res.Content = val
+			return api.DNSRecordList{res}, err
+		}
+	}
+	return api.DNSRecordList{},nil
 }
 
 // return all records for domain (For AXFR-type requests)
+// Returns nil if request should not be redirected and DNS records if it should
 func (d *ipredirDomains) List(api.QueryList) (api.DNSRecordList, error) {
 	var err error
-	r := make([]api.DNSRecord, 0)
-	return r, err
+	return api.DNSRecordList{},err
+	return nil, err
 }

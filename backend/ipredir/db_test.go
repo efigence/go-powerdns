@@ -60,7 +60,7 @@ func TestRecordInsert(t *testing.T) {
 		}
 		res, err := backend.Lookup(q)
 		So(err,ShouldEqual,nil)
-		So(res,ShouldResemble,api.ResponseFailed())
+		So(res,ShouldResemble,api.DNSRecordList{})
 	})
 }
 
@@ -86,5 +86,33 @@ func TestRecordLookup(t *testing.T) {
 		sort.Sort(correctOutput)
 
 		So(res,ShouldResemble,correctOutput)
+	})
+}
+
+func TestRedir(t *testing.T) {
+	backend,_ := New("")
+	backend.RedirIp("127.0.0.1","127.0.0.2")
+
+	Convey("Lookup from redired host", t, func() {
+		q:= api.QueryLookup{
+			QType: "A",
+			QName: "www.example.com",
+			Remote: "127.0.0.1",
+		}
+		res,err := backend.Lookup(q)
+		So(err,ShouldEqual,nil)
+		So(len(res),ShouldBeGreaterThan,0)
+		So(res[0].Content,ShouldEqual,"127.0.0.2")
+
+		q.QType = "SOA"
+		res,err = backend.Lookup(q)
+		So(err,ShouldEqual,nil)
+		So(len(res),ShouldBeGreaterThan,0)
+		So(res[0].Content,ShouldContainSubstring,"example.com 1 10 10 10 10")
+
+		q.Remote = "127.0.1.1"
+		res,err = backend.Lookup(q)
+		So(err,ShouldEqual,nil)
+		So(len(res),ShouldEqual,0)
 	})
 }

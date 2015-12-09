@@ -34,7 +34,7 @@ func (d *YAMLDomains) AddDomain(api.DNSDomain) error {
 }
 
 // add records to DB
-func (d *YAMLDomains) AddRecord(domain string, record api.DNSRecord) error {
+func (d *YAMLDomains) AddRecord(record api.DNSRecord) error {
 	var err error
 	return err
 }

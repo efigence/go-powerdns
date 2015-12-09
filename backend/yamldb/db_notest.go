@@ -38,9 +38,9 @@ func TestRecordInsert(t *testing.T) {
 		So(err,ShouldEqual,nil)
 	})
 	Convey("Record insert", t, func() {
-		So(backend.AddRecord("example.com", testRecords["wildcard"]), ShouldEqual, nil)
-		So(backend.AddRecord("example.com", testRecords["www"]), ShouldEqual, nil)
-		So(backend.AddRecord("example.com", testRecords["zone"]), ShouldEqual, nil)
+		So(backend.AddRecord(testRecords["wildcard"]), ShouldEqual, nil)
+		So(backend.AddRecord(testRecords["www"]), ShouldEqual, nil)
+		So(backend.AddRecord(testRecords["zone"]), ShouldEqual, nil)
 		q := api.QueryLookup{
 			QType: "A",
 			QName: "www.example.com",
@@ -54,9 +54,9 @@ func TestRecordInsert(t *testing.T) {
 func TestRecordList(t *testing.T) {
 	backend,_ := New("t-data/dns.yaml")
 	Convey("Record insert", t, func() {
-		So(backend.AddRecord("example.com", testRecords["wildcard"]), ShouldEqual, nil)
-		So(backend.AddRecord("example.com", testRecords["www"]), ShouldEqual, nil)
-		So(backend.AddRecord("example.com", testRecords["zone"]), ShouldEqual, nil)
+		So(backend.AddRecord(testRecords["wildcard"]), ShouldEqual, nil)
+		So(backend.AddRecord(testRecords["www"]), ShouldEqual, nil)
+		So(backend.AddRecord(testRecords["zone"]), ShouldEqual, nil)
 		q := api.QueryLookup{
 			QType: "A",
 			QName: "www.example.com",

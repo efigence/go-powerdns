@@ -71,12 +71,6 @@ func New(c CallbackList) (Api, error) {
 	return api, err
 }
 
-
-
-
-
-
-
 func (data QueryLookup) Dump() string {
 	return fmt.Sprintf("%+v", data)
 }

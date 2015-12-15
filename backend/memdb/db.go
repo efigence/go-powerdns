@@ -50,9 +50,16 @@ func (d *MemDomains) AddRecord(record api.DNSRecord) error {
 // return records for query
 func (d *MemDomains) Lookup(query api.QueryLookup) (api.DNSRecordList, error) {
 	var err error
-	return d.DomainRecords[query.QName][query.QType],err
+	if query.QType == `ANY` {
+		var recordsAny api.DNSRecordList
+		for _, records := range d.DomainRecords[query.QName] {
+			recordsAny = append(recordsAny, records...)
+		}
+			return recordsAny,err
+	} else {
+		return d.DomainRecords[query.QName][query.QType],err
+	}
 }
-
 // return all records for domain (For AXFR-type requests)
 func (d *MemDomains) List(api.QueryList) (api.DNSRecordList, error) {
 	var err error

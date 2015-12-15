@@ -88,3 +88,29 @@ func TestRecordLookup(t *testing.T) {
 		So(res,ShouldResemble,correctOutput)
 	})
 }
+
+
+func TestRecordLookupAny(t *testing.T) {
+	backend,_ := New("t-data/dns.yaml")
+	backend.AddRecord(testRecords["wildcard"])
+	backend.AddRecord(testRecords["www"])
+	backend.AddRecord(testRecords["www2"])
+	backend.AddRecord(testRecords["www3"])
+	backend.AddRecord(testRecords["zone"])
+
+	Convey("Lookup", t, func() {
+		q := api.QueryLookup{
+			QType: "ANY",
+			QName: "www.example.com",
+		}
+		res, err := backend.Lookup(q)
+		So(err,ShouldEqual,nil)
+		// ShouldContain craps itself on structs, work around it
+		correctOutput := api.DNSRecordList{ testRecords["www"],testRecords["www2"],testRecords["www3"] }
+
+		sort.Sort(res)
+		sort.Sort(correctOutput)
+
+		So(res,ShouldResemble,correctOutput)
+	})
+}

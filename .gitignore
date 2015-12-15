@@ -10,6 +10,7 @@ DEADJOE
 # compiled files
 _vendor/
 *\.test
+.env.sh
 tags
 TAGS
 

@@ -40,14 +40,14 @@ func TestQuery(t *testing.T) {
 	Convey("Lookup", t, func() {
 		api, _ := New(cbList)
 		out, err := api.Parse(queries["lookup"]);
-		testQueryOutput, _ := qLookup.Query(QueryLookup{})
+		testQueryOutput, _ := qLookup.Lookup(QueryLookup{})
 		So(err,ShouldEqual,nil)
 		So(out,ShouldResemble,testQueryOutput)
 	})
 	Convey("List", t, func() {
 		api, _ := New(cbList)
 		out, err := api.Parse(queries["list"]);
-		testQueryOutput, _ := qList.Query(QueryList{})
+		testQueryOutput, _ := qList.List(QueryList{})
 		So(err,ShouldEqual,nil)
 		So(out,ShouldResemble,testQueryOutput)
 	})
@@ -62,7 +62,7 @@ func TestQuery(t *testing.T) {
 
 type testQLookup struct {}
 
-func (testQLookup) Query(q QueryLookup) (QueryResponse, error) {
+func (testQLookup) Lookup(q QueryLookup) (QueryResponse, error) {
 	var err error
 	res := NewResponse()
 	res.Result = []DNSRecord{
@@ -79,7 +79,7 @@ func (testQLookup) Query(q QueryLookup) (QueryResponse, error) {
 
 type testQList struct {}
 
-func (testQList) Query(q QueryList) (QueryResponse, error) {
+func (testQList) List(q QueryList) (QueryResponse, error) {
 	var err error
 	res := NewResponse()
 	res.Result = []DNSRecord{

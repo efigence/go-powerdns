@@ -13,11 +13,11 @@ type rawQuery struct {
 
 
 type QueryLookupCB interface {
-	Query(request QueryLookup) (QueryResponse, error)
+	Lookup(request QueryLookup) (QueryResponse, error)
 }
 
 type QueryListCB interface {
-	Query(request QueryList) (QueryResponse, error)
+	List(request QueryList) (QueryResponse, error)
 }
 
 
@@ -44,7 +44,7 @@ func (api Api)Parse(raw string) (QueryResponse, error) {
 			var n QueryResponse
 			return n, err
 		}
-		return api.callbacks.Lookup.Query(query)
+		return api.callbacks.Lookup.Lookup(query)
 	case `"list"`:
 		var query QueryList
 		err := json.Unmarshal(objmap[`parameters`],&query)
@@ -52,7 +52,7 @@ func (api Api)Parse(raw string) (QueryResponse, error) {
 			var n QueryResponse
 			return n, err
 		}
-		return api.callbacks.List.Query(query)
+		return api.callbacks.List.List(query)
 	case `"initialize"`:
 		return ResponseOk(), err
 	default:

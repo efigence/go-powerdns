@@ -15,7 +15,7 @@ type WebApp struct {
 func New() WebApp {
 	var v WebApp
 	v.render = render.New(render.Options{
-		IndentJSON: true, // FIXME only in debug mode ?
+//		IndentJSON: true, // FIXME only in debug mode ?
 	})
 	v.redirBackend,_ = ipredir.New("")
 	v.memBackend,_ = memdb.New("")

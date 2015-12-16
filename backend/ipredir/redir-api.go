@@ -27,9 +27,7 @@ func (d *ipredirDomains) DeleteRedirIp(srcIp string) error {
 	var err error
 	d.Lock()
 	defer d.Unlock()
-//	if _, ok := d.redirMap[srcIp]; ok {
-		delete(d.redirMap, srcIp)
-//	}
+	delete(d.redirMap, srcIp)
 	return err
 }
 

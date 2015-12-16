@@ -42,21 +42,20 @@ func TestAdd(t *testing.T) {
 			"6.2.2.2": "6.3.3.3",
 			"7.2.2.2": "7.3.3.3",
 		})
+		err =  backend.DeleteRedirIp("6.2.2.2")
 		So(err, ShouldEqual, nil)
-		Convey("Delete existing IP",func() {
-			err =  backend.DeleteRedirIp("6.2.2.2")
-			So(err, ShouldEqual, nil)
-			err =  backend.DeleteRedirIp("99.99.99.99")
-			So(err, ShouldEqual, nil)
-			redirIp, _ := backend.ListRedirIp()
-			So (redirIp["5.2.2.2"],ShouldEqual,"5.3.3.3")
-			So (redirIp["7.2.2.2"],ShouldEqual,"7.3.3.3")
-			So (redirIp["5.2.2.2"],ShouldEqual,"5.3.3.3")
+		err =  backend.DeleteRedirIp("99.99.99.99")
+		So(err, ShouldEqual, nil)
+		redirIp, err := backend.ListRedirIp()
+		So(err, ShouldEqual, nil)
+		Convey("Deleted IP should not exist",func() {
 			So (redirIp,ShouldNotContainKey,"99.99.99.99")
 			So (redirIp,ShouldNotContainKey,"6.2.2.2")
 		})
-
-
+		Convey("Non-deleted IPs should exist",func() {
+			So (redirIp["5.2.2.2"],ShouldEqual,"5.3.3.3")
+			So (redirIp["7.2.2.2"],ShouldEqual,"7.3.3.3")
+		})
 
 	})
 

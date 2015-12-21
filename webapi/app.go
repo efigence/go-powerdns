@@ -2,7 +2,8 @@ package webapi
 import (
 	"github.com/unrolled/render" // or "gopkg.in/unrolled/render.v1")
 	"github.com/efigence/go-powerdns/api"
-//	"github.com/zenazn/goji/web"
+	//	"github.com/zenazn/goji/web"
+	"fmt"
 )
 
 
@@ -35,5 +36,13 @@ func New() WebApp {
 	}
 	v.dnsApi = dnsApi
 
+	return v
+}
+
+
+func respErr(err error) (map[string]interface{}) {
+	v := make(map[string]interface{})
+	v["response"] = false
+	v["error"] = fmt.Sprintf("%s",err)
 	return v
 }

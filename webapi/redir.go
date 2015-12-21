@@ -18,10 +18,7 @@ func (w *WebApp) AddRedir(c web.C, wr http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		w.render.JSON(wr, http.StatusOK, respOk)
 	} else {
-		respErr := map[string]string {
-			"response":"fail",
-		}
-		w.render.JSON(wr, http.StatusOK, respErr)
+		w.render.JSON(wr, http.StatusOK, respErr(err))
 	}
 
 
@@ -41,10 +38,7 @@ func (w *WebApp) DeleteRedir(c web.C, wr http.ResponseWriter, r *http.Request) {
 		if err == nil {
 		w.render.JSON(wr, http.StatusOK, respOk)
 	} else {
-		respErr := map[string]string {
-			"response":"fail",
-		}
-		w.render.JSON(wr, http.StatusOK, respErr)
+		w.render.JSON(wr, http.StatusOK, respErr(err))
 	}
 }
 

@@ -25,11 +25,20 @@ func (w *WebApp) AddRedir(c web.C, wr http.ResponseWriter, r *http.Request) {
 }
 func (w *WebApp) BatchAddRedir(c web.C, wr http.ResponseWriter, r *http.Request) {
 	raw,err := ioutil.ReadAll(r.Body)
-	if (err != nil) {return}
+	if (err != nil) {
+		w.render.JSON(wr, http.StatusOK, respErr(err))
+		return
+	}
 	ipList := make(map[string]string)
 	err = json.Unmarshal(raw, &ipList)
-	if (err != nil) {return}
+	if (err != nil) {
+		w.render.JSON(wr, http.StatusOK, respErr(err))
+		return}
 	err = w.dnsBackend.redirBackend.SetRedirIp(ipList)
+	if (err != nil) {
+		w.render.JSON(wr, http.StatusOK, respErr(err))
+		return
+	}
 	log.Notice("loaded %d IPs", len(ipList))
 	w.render.JSON(wr, http.StatusOK, respOk)
 }

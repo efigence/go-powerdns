@@ -30,6 +30,7 @@ func (w *WebApp) BatchAddRedir(c web.C, wr http.ResponseWriter, r *http.Request)
 	err = json.Unmarshal(raw, &ipList)
 	if (err != nil) {return}
 	err = w.dnsBackend.redirBackend.SetRedirIp(ipList)
+	log.Notice("loaded %d IPs", len(ipList))
 	w.render.JSON(wr, http.StatusOK, respOk)
 }
 func (w *WebApp) DeleteRedir(c web.C, wr http.ResponseWriter, r *http.Request) {

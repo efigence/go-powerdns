@@ -37,3 +37,9 @@ func (w *WebApp) DeleteRedir(c web.C, wr http.ResponseWriter, r *http.Request) {
 		w.render.JSON(wr, http.StatusOK, respErr)
 	}
 }
+
+func (w *WebApp) ListRedir(c web.C, wr http.ResponseWriter, r *http.Request) {
+	list, _ := w.dnsBackend.redirBackend.ListRedirIp()
+
+	w.render.JSON(wr, http.StatusOK, list)
+}

@@ -43,6 +43,7 @@ func main() {
 	goji.Post("/redir/batch", webApp.BatchAddRedir)
 	goji.Post("/redir/:from/:to", webApp.AddRedir)
 	goji.Delete("/redir/:from", webApp.DeleteRedir)
+	goji.Get("/redir/list", webApp.ListRedir)
 
 	//_, _ = api.New(api.CallbackList{})
 

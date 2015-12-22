@@ -10,8 +10,8 @@ function prequery ( dnspacket )
    qname, qtype = dnspacket:getQuestion()
    pdnslog ("q: ".. qname.." "..qtype)
    if lastRedirUpdate + 60 < os.time() then
-      result, statuscode, content = http.request("http://127.0.0.1:63636/redir/list")
-      if pcall(function() getIpList(content) end) then
+      body, statuscode, headers = http.request("http://127.0.0.1:63636/redir/list")
+      if pcall(function() getIpList(body) end) then
          pdnslog ("updating IP list")
          lastRedirUpdate = os.time()
       else
@@ -39,5 +39,7 @@ end
 
 function getIpList (content)
    d = json.decode(content)
-   redirList = d
+   if d then
+      redirList = d
+   end
 end

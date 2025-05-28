@@ -1,19 +1,19 @@
 package api
 
 import (
-	"strings"
 	"fmt"
+	"strings"
 )
 
 // Single DNS record structure
-type DNSRecord struct{
-	QType string `json:"qtype"`
-	QName string `json:"qname"`
-	Content string `json:"content"`
-	Ttl int32 `json:"ttl"`
-	DomainId int `json:"domain_id,omitempty"`
-	ScopeMask string `json:"scopeMask,omitempty"`
-	AuthString string`json:"auth,omitempty"`
+type DNSRecord struct {
+	QType      string `json:"qtype"`
+	QName      string `json:"qname"`
+	Content    string `json:"content"`
+	Ttl        int32  `json:"ttl"`
+	DomainId   int    `json:"domain_id,omitempty"`
+	ScopeMask  string `json:"scopeMask,omitempty"`
+	AuthString string `json:"auth,omitempty"`
 }
 
 // sortable list of records, used usually as response
@@ -23,19 +23,21 @@ type DNSRecordList []DNSRecord
 // Domain + SOA data
 
 type DNSDomain struct {
-	Name string
+	Name      string
 	PrimaryNs string
-	Owner string
+	Owner     string
 	// Assuming they are same data type as TTL, RFC doesnt say if those are unsigned or not
-	Serial uint32
-	Refresh int32
-	Retry int32
-	Expiry int32
+	Serial   uint32
+	Refresh  int32
+	Retry    int32
+	Expiry   int32
 	Nxdomain int32
 }
-func (d *DNSDomain)UpdateSerial() {
+
+func (d *DNSDomain) UpdateSerial() {
 	d.Serial += 1 // Yes, overflow is completely fine here,
 }
+
 // interface for backend
 
 type DomainBackend interface {
@@ -47,33 +49,31 @@ type DomainBackend interface {
 	List(q QueryList) (DNSRecordList, error)
 }
 
-
 // generate array of domains from subdomain, specific -> generic
-//
-func ExpandDNSName (name string) ([]string, error) {
+func ExpandDNSName(name string) ([]string, error) {
 	var s []string
 	var err error
 
-	parts:= strings.Split(name,`.`)
-	for i := 0; i < len(parts);i++ {
-		s = append(s, strings.Join(parts[i:],`.`))
+	parts := strings.Split(name, `.`)
+	for i := 0; i < len(parts); i++ {
+		s = append(s, strings.Join(parts[i:], `.`))
 	}
 	return s, err
 
 }
 
-func GenerateSoaFromDomain(d DNSDomain) (DNSRecord) {
+func GenerateSoaFromDomain(d DNSDomain) DNSRecord {
 	var rec DNSRecord
-	rec.QType="SOA"
-	rec.QName=d.Name
+	rec.QType = "SOA"
+	rec.QName = d.Name
 	content := []string{
 		d.PrimaryNs,
 		" ",
 		d.Owner,
 		" ",
-		fmt.Sprintf("%d %d %d %d %d",d.Serial,d.Refresh,d.Retry,d.Expiry,d.Nxdomain),
+		fmt.Sprintf("%d %d %d %d %d", d.Serial, d.Refresh, d.Retry, d.Expiry, d.Nxdomain),
 	}
-	rec.Content = strings.Join(content,"")
+	rec.Content = strings.Join(content, "")
 	rec.Ttl = d.Nxdomain
 	return rec
 }
@@ -85,7 +85,7 @@ func (slice DNSRecordList) Len() int {
 
 // sort helper
 func (slice DNSRecordList) Less(a, b int) bool {
-	return ( slice[a].QName +slice[a].Content + slice[a].QType ) < ( slice[b].QName +slice[b].Content + slice[b].QType );
+	return (slice[a].QName + slice[a].Content + slice[a].QType) < (slice[b].QName + slice[b].Content + slice[b].QType)
 }
 
 // sort helper

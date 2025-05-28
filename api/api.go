@@ -5,12 +5,10 @@ import (
 	"fmt"
 )
 
-
 type rawQuery struct {
 	m string
 	p map[string]json.RawMessage
 }
-
 
 type QueryLookupCB interface {
 	Lookup(request QueryLookup) (QueryResponse, error)
@@ -20,18 +18,16 @@ type QueryListCB interface {
 	List(request QueryList) (QueryResponse, error)
 }
 
-
 type CallbackList struct {
 	Lookup QueryLookupCB
-	List QueryListCB
+	List   QueryListCB
 }
 
-
-func (api Api)Parse(raw string) (QueryResponse, error) {
+func (api Api) Parse(raw string) (QueryResponse, error) {
 	var err error
 	// parse "first level" of json to get type of query
 	var objmap map[string]json.RawMessage
-	err = json.Unmarshal([]byte(raw),&objmap)
+	err = json.Unmarshal([]byte(raw), &objmap)
 	if err != nil {
 		var n QueryResponse
 		return n, err
@@ -39,7 +35,7 @@ func (api Api)Parse(raw string) (QueryResponse, error) {
 	switch string(objmap[`method`]) {
 	case `"lookup"`:
 		var query QueryLookup
-		err := json.Unmarshal(objmap[`parameters`],&query)
+		err := json.Unmarshal(objmap[`parameters`], &query)
 		if err != nil {
 			var n QueryResponse
 			return n, err
@@ -47,7 +43,7 @@ func (api Api)Parse(raw string) (QueryResponse, error) {
 		return api.callbacks.Lookup.Lookup(query)
 	case `"list"`:
 		var query QueryList
-		err := json.Unmarshal(objmap[`parameters`],&query)
+		err := json.Unmarshal(objmap[`parameters`], &query)
 		if err != nil {
 			var n QueryResponse
 			return n, err

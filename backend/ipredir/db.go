@@ -6,10 +6,8 @@ import (
 	"github.com/efigence/go-powerdns/api"
 	"strings"
 	"sync"
-
-//	"gopkg.in/mem.v2"
+	//	"gopkg.in/mem.v2"
 )
-
 
 func New(file string) (DomainBackend, error) {
 	var v ipredirDomains
@@ -71,7 +69,7 @@ func (d *ipredirDomains) Lookup(query api.QueryLookup) (api.DNSRecordList, error
 				res.Ttl = 10
 				return api.DNSRecordList{res}, err
 			} else { // someone thinks we're root domain.... nope
-				return api.DNSRecordList{}, errors.New(fmt.Sprintf("too short domain #+v, we're not handling root", splitDomain))
+				return api.DNSRecordList{}, errors.New(fmt.Sprintf("too short domain %+v, we're not handling root", splitDomain))
 			}
 		} else {
 			var res api.DNSRecord

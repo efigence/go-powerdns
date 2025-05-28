@@ -4,9 +4,8 @@ import (
 	"io"
 )
 
-
 func (d *YAMLDomains) ParseDNS(data io.Reader) error {
 	var err error
-	_=data
+	_ = data
 	return err
 }

@@ -1,11 +1,10 @@
 package ipredir
 
 import (
-	"net"
 	"errors"
 	"fmt"
+	"net"
 )
-
 
 func (d *ipredirDomains) AddRedirIp(srcIp string, target string) error {
 	var err error
@@ -18,7 +17,7 @@ func (d *ipredirDomains) AddRedirIp(srcIp string, target string) error {
 		return errors.New(fmt.Sprintf("Not a valid IP: %+v", srcIp))
 	}
 	d.Lock()
-	defer 	d.Unlock()
+	defer d.Unlock()
 	d.redirMap[src.String()] = dst.String()
 	return err
 }

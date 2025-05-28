@@ -1,111 +1,106 @@
 package api
 
 import (
-	"testing"
 	. "github.com/smartystreets/goconvey/convey"
-//	"reflect"
+	"testing"
+	//	"reflect"
 	"fmt"
 )
 
 var testStrings []string
 
-var	queries = map[string]string {
-	"lookup": `{"method":"lookup", "parameters":{"qtype":"ANY", "qname":"www.example.com", "remote":"192.0.2.24", "local":"192.0.2.1", "real-remote":"192.0.2.2", "zone-id":-1}}`,
-	"list": `{"method":"list", "parameters":{"zonename":"example.com","domain_id":-1}}`,
+var queries = map[string]string{
+	"lookup":     `{"method":"lookup", "parameters":{"qtype":"ANY", "qname":"www.example.com", "remote":"192.0.2.24", "local":"192.0.2.1", "real-remote":"192.0.2.2", "zone-id":-1}}`,
+	"list":       `{"method":"list", "parameters":{"zonename":"example.com","domain_id":-1}}`,
 	"initialize": `{"method":"initialize", "parameters":{"command":"/path/to/something", "timeout":"2000", "something":"else"}}`,
-	"badreq" : `{"asd":123}`,
+	"badreq":     `{"asd":123}`,
 }
-
-
-
 
 func TestQuery(t *testing.T) {
 	fmt.Printf("")
-	var qLookup testQLookup;
-	var qList testQList;
+	var qLookup testQLookup
+	var qList testQList
 	cbList := CallbackList{
 		Lookup: qLookup,
-		List: qList,
+		List:   qList,
 	}
 	Convey("Create new API", t, func() {
 		_, err := New(CallbackList{})
-		So(err,ShouldEqual,nil)
+		So(err, ShouldEqual, nil)
 	})
 	Convey("Init", t, func() {
 		api, _ := New(cbList)
-		out, err := api.Parse(queries["initialize"]);
-		So(err,ShouldEqual,nil)
-		So(out,ShouldResemble,ResponseOk())
+		out, err := api.Parse(queries["initialize"])
+		So(err, ShouldEqual, nil)
+		So(out, ShouldResemble, ResponseOk())
 	})
 	Convey("Lookup", t, func() {
 		api, _ := New(cbList)
-		out, err := api.Parse(queries["lookup"]);
+		out, err := api.Parse(queries["lookup"])
 		testQueryOutput, _ := qLookup.Lookup(QueryLookup{})
-		So(err,ShouldEqual,nil)
-		So(out,ShouldResemble,testQueryOutput)
+		So(err, ShouldEqual, nil)
+		So(out, ShouldResemble, testQueryOutput)
 	})
 	Convey("List", t, func() {
 		api, _ := New(cbList)
-		out, err := api.Parse(queries["list"]);
+		out, err := api.Parse(queries["list"])
 		testQueryOutput, _ := qList.List(QueryList{})
-		So(err,ShouldEqual,nil)
-		So(out,ShouldResemble,testQueryOutput)
+		So(err, ShouldEqual, nil)
+		So(out, ShouldResemble, testQueryOutput)
 	})
 	Convey("BadReq", t, func() {
 		api, _ := New(cbList)
-		out, err := api.Parse(queries["badreq"]);
-		So(err,ShouldEqual,nil)
-		So(out,ShouldResemble,ResponseFailed())
+		out, err := api.Parse(queries["badreq"])
+		So(err, ShouldEqual, nil)
+		So(out, ShouldResemble, ResponseFailed())
 	})
 }
 
-
-type testQLookup struct {}
+type testQLookup struct{}
 
 func (testQLookup) Lookup(q QueryLookup) (QueryResponse, error) {
 	var err error
 	res := NewResponse()
 	res.Result = []DNSRecord{
 		{
-			QType: "A",
-			QName: "www.example.com",
+			QType:   "A",
+			QName:   "www.example.com",
 			Content: "1.2.3.4",
-			Ttl: 60,
+			Ttl:     60,
 		},
 	}
 	return res, err
 }
 
-
-type testQList struct {}
+type testQList struct{}
 
 func (testQList) List(q QueryList) (QueryResponse, error) {
 	var err error
 	res := NewResponse()
 	res.Result = []DNSRecord{
 		{
-			QType: "A",
-			QName: "www.example.com",
+			QType:   "A",
+			QName:   "www.example.com",
 			Content: "1.2.3.4",
-			Ttl: 60,
+			Ttl:     60,
 		},
 		{
-			QType: "MX",
-			QName: "10 example.com",
+			QType:   "MX",
+			QName:   "10 example.com",
 			Content: "mx1.example.com",
-			Ttl: 60,
+			Ttl:     60,
 		},
 		{
-			QType: "A",
-			QName: "mx.example.com",
+			QType:   "A",
+			QName:   "mx.example.com",
 			Content: "5.6.7.8",
-			Ttl: 60,
+			Ttl:     60,
 		},
 		{
-			QType: "TXT",
-			QName: "example.com",
+			QType:   "TXT",
+			QName:   "example.com",
 			Content: "a record",
-			Ttl: 60,
+			Ttl:     60,
 		},
 	}
 	return res, err

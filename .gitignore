@@ -34,7 +34,7 @@ report.xml
 _cgo_defun.c
 _cgo_gotypes.go
 _cgo_export.*
-
+go-powerdns
 _testmain.go
 
 *.exe

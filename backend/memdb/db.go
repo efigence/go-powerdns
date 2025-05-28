@@ -3,9 +3,7 @@ package memdb
 import (
 	"github.com/efigence/go-powerdns/api"
 	//	"gopkg.in/mem.v2"
-
 )
-
 
 func New(file string) (DomainBackend, error) {
 	var v MemDomains
@@ -28,11 +26,21 @@ type MemDomains struct {
 func (d *MemDomains) AddDomain(domain api.DNSDomain) error {
 	var err error
 	// some defaults
-	if (domain.Owner == "") {domain.Owner = "hostmaster." + domain.Name}
-	if (domain.Refresh == 0) {domain.Refresh = 86400 * 2 }
-	if (domain.Retry == 0) {domain.Retry = 60 * 15}
-	if (domain.Expiry == 0) {domain.Expiry = 86400 * 14 }
-	if (domain.Nxdomain == 0) {domain.Nxdomain = 60 * 30}
+	if domain.Owner == "" {
+		domain.Owner = "hostmaster." + domain.Name
+	}
+	if domain.Refresh == 0 {
+		domain.Refresh = 86400 * 2
+	}
+	if domain.Retry == 0 {
+		domain.Retry = 60 * 15
+	}
+	if domain.Expiry == 0 {
+		domain.Expiry = 86400 * 14
+	}
+	if domain.Nxdomain == 0 {
+		domain.Nxdomain = 60 * 30
+	}
 	d.AddRecord(api.GenerateSoaFromDomain(domain))
 	return err
 }
@@ -40,7 +48,7 @@ func (d *MemDomains) AddDomain(domain api.DNSDomain) error {
 // add records to DB
 func (d *MemDomains) AddRecord(record api.DNSRecord) error {
 	var err error
-	if (d.DomainRecords[record.QName] == nil) {
+	if d.DomainRecords[record.QName] == nil {
 		d.DomainRecords[record.QName] = make(map[string]api.DNSRecordList)
 	}
 	d.DomainRecords[record.QName][record.QType] = append(d.DomainRecords[record.QName][record.QType], record)
@@ -55,11 +63,12 @@ func (d *MemDomains) Lookup(query api.QueryLookup) (api.DNSRecordList, error) {
 		for _, records := range d.DomainRecords[query.QName] {
 			recordsAny = append(recordsAny, records...)
 		}
-			return recordsAny,err
+		return recordsAny, err
 	} else {
-		return d.DomainRecords[query.QName][query.QType],err
+		return d.DomainRecords[query.QName][query.QType], err
 	}
 }
+
 // return all records for domain (For AXFR-type requests)
 func (d *MemDomains) List(api.QueryList) (api.DNSRecordList, error) {
 	var err error

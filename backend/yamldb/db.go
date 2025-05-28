@@ -3,7 +3,6 @@ package yamldb
 import (
 	"github.com/efigence/go-powerdns/api"
 	"os"
-
 )
 
 func asdf() {

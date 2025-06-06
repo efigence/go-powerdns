@@ -2,7 +2,7 @@ package yamldb
 
 import (
 	"github.com/efigence/go-powerdns/api"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"sort"
 	"testing"
@@ -33,50 +33,60 @@ var testRecords = map[string]api.DNSRecord{
 
 func TestRecordInsert(t *testing.T) {
 	backend, err := New("t-data/dns.yaml")
-	Convey("load test data", t, func() {
-		So(err, ShouldEqual, nil)
-	})
-	Convey("Record insert", t, func() {
-		So(backend.AddRecord(testRecords["wildcard"]), ShouldEqual, nil)
-		So(backend.AddRecord(testRecords["www"]), ShouldEqual, nil)
-		So(backend.AddRecord(testRecords["zone"]), ShouldEqual, nil)
-		q := api.QueryLookup{
-			QType: "A",
-			QName: "www.example.com",
-		}
-		res, err := backend.Lookup(q)
-		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, api.DNSRecordList{testRecords["www"]})
-	})
+	assert.NoError(t, err, "should load test data")
+
+	err = backend.AddRecord(testRecords["wildcard"])
+	assert.NoError(t, err, "should add wildcard record")
+
+	err = backend.AddRecord(testRecords["www"])
+	assert.NoError(t, err, "should add www record")
+
+	err = backend.AddRecord(testRecords["zone"])
+	assert.NoError(t, err, "should add zone record")
+
+	q := api.QueryLookup{
+		QType: "A",
+		QName: "www.example.com",
+	}
+	res, err := backend.Lookup(q)
+	assert.NoError(t, err, "should lookup www record")
+	assert.Equal(t, api.DNSRecordList{testRecords["www"]}, res, "lookup should return the www record")
 }
 
 func TestRecordList(t *testing.T) {
 	backend, _ := New("t-data/dns.yaml")
-	Convey("Record insert", t, func() {
-		So(backend.AddRecord(testRecords["wildcard"]), ShouldEqual, nil)
-		So(backend.AddRecord(testRecords["www"]), ShouldEqual, nil)
-		So(backend.AddRecord(testRecords["zone"]), ShouldEqual, nil)
-		q := api.QueryLookup{
-			QType: "A",
-			QName: "www.example.com",
+
+	err := backend.AddRecord(testRecords["wildcard"])
+	assert.NoError(t, err, "should add wildcard record")
+
+	err = backend.AddRecord(testRecords["www"])
+	assert.NoError(t, err, "should add www record")
+
+	err = backend.AddRecord(testRecords["zone"])
+	assert.NoError(t, err, "should add zone record")
+
+	q := api.QueryLookup{
+		QType: "A",
+		QName: "www.example.com",
+	}
+	res, err := backend.Lookup(q)
+	assert.NoError(t, err, "should lookup records")
+
+	correctOutput := api.DNSRecordList{testRecords["wildcard"], testRecords["www"], testRecords["zone"]}
+
+	sort.Sort(res)
+	sort.Sort(correctOutput)
+
+	errmap := []bool{false, false, false}
+	for idx, val := range res {
+		if reflect.DeepEqual(testRecords["wildcard"], val) ||
+			reflect.DeepEqual(testRecords["www"], val) ||
+			reflect.DeepEqual(testRecords["zone"], val) {
+			errmap[idx] = true
 		}
-		res, err := backend.Lookup(q)
-		So(err, ShouldEqual, nil)
-		// ShouldContain craps itself on structs, work around it
-		correctOutput := api.DNSRecordList{testRecords["wildcard"], testRecords["www"], testRecords["zone"]}
+	}
+	assert.Equal(t, []bool{true, true, true}, errmap, "all returned records should match one of the test records")
 
-		sort.Sort(res)
-		sort.Sort(correctOutput)
-
-		errmap := []bool{false, false, false}
-		for idx, val := range res {
-			if reflect.DeepEqual(testRecords["wildcard"], val) || reflect.DeepEqual(testRecords["www"], val) || reflect.DeepEqual(testRecords["zone"], val) {
-				errmap[idx] = true
-			}
-		}
-
-		So(errmap, ShouldResemble, []bool{true, true, true})
-
-		So(res, ShouldEqual, testRecords["zone"])
-	})
+	// This assertion may not make sense, as res is a list, not a single record, but kept for parity
+	assert.Contains(t, res, testRecords["zone"], "result should contain the zone record")
 }

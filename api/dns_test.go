@@ -1,23 +1,20 @@
 package api
 
 import (
-	"fmt"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestExpandDNSName(t *testing.T) {
 	d := "very.long.domain.name.com"
 	splittedDomain, err := ExpandDNSName(d)
-	Convey("Domain dissection", t, func() {
-		So(err, ShouldEqual, nil)
-		So(fmt.Sprintf("records: %d", len(splittedDomain)), ShouldEqual, "records: 5")
-		So(splittedDomain[0], ShouldEqual, "very.long.domain.name.com")
-		So(splittedDomain[1], ShouldEqual, "long.domain.name.com")
-		So(splittedDomain[2], ShouldEqual, "domain.name.com")
-		So(splittedDomain[3], ShouldEqual, "name.com")
-		So(splittedDomain[4], ShouldEqual, "com") // we TLD now
-	})
+	assert.NoError(t, err)
+	assert.Len(t, splittedDomain, 5)
+	assert.Equal(t, "very.long.domain.name.com", splittedDomain[0])
+	assert.Equal(t, "long.domain.name.com", splittedDomain[1])
+	assert.Equal(t, "domain.name.com", splittedDomain[2])
+	assert.Equal(t, "name.com", splittedDomain[3])
+	assert.Equal(t, "com", splittedDomain[4])
 }
 
 func TestSoaFromDomain(t *testing.T) {
@@ -37,10 +34,8 @@ func TestSoaFromDomain(t *testing.T) {
 		Content: "ns1.example.com hostmaster.example.com 12345 86400 300 864000 3600",
 		Ttl:     3600,
 	}
-	Convey("Generate SOA record", t, func() {
-		soaRecord := GenerateSoaFromDomain(d)
-		So(soaRecord, ShouldResemble, res)
-	})
+	soaRecord := GenerateSoaFromDomain(d)
+	assert.Equal(t, res, soaRecord)
 }
 
 func BenchmarkExpandDNSName(b *testing.B) {

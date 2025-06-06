@@ -1,7 +1,7 @@
 package api
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	//	"reflect"
 	"fmt"
@@ -24,35 +24,35 @@ func TestQuery(t *testing.T) {
 		Lookup: qLookup,
 		List:   qList,
 	}
-	Convey("Create new API", t, func() {
+	t.Run("Create new API", func(t *testing.T) {
 		_, err := New(CallbackList{})
-		So(err, ShouldEqual, nil)
+		assert.NoError(t, err)
 	})
-	Convey("Init", t, func() {
+	t.Run("Init", func(t *testing.T) {
 		api, _ := New(cbList)
 		out, err := api.Parse(queries["initialize"])
-		So(err, ShouldEqual, nil)
-		So(out, ShouldResemble, ResponseOk())
+		assert.NoError(t, err)
+		assert.Equal(t, out, ResponseOk())
 	})
-	Convey("Lookup", t, func() {
+	t.Run("Lookup", func(t *testing.T) {
 		api, _ := New(cbList)
 		out, err := api.Parse(queries["lookup"])
 		testQueryOutput, _ := qLookup.Lookup(QueryLookup{})
-		So(err, ShouldEqual, nil)
-		So(out, ShouldResemble, testQueryOutput)
+		assert.NoError(t, err)
+		assert.Equal(t, testQueryOutput, out)
 	})
-	Convey("List", t, func() {
+	t.Run("List", func(t *testing.T) {
 		api, _ := New(cbList)
 		out, err := api.Parse(queries["list"])
 		testQueryOutput, _ := qList.List(QueryList{})
-		So(err, ShouldEqual, nil)
-		So(out, ShouldResemble, testQueryOutput)
+		assert.NoError(t, err)
+		assert.Equal(t, testQueryOutput, out)
 	})
-	Convey("BadReq", t, func() {
+	t.Run("BadReq", func(t *testing.T) {
 		api, _ := New(cbList)
 		out, err := api.Parse(queries["badreq"])
-		So(err, ShouldEqual, nil)
-		So(out, ShouldResemble, ResponseFailed())
+		assert.NoError(t, err)
+		assert.Equal(t, ResponseFailed(), out)
 	})
 }
 

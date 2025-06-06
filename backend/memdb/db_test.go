@@ -1,7 +1,8 @@
 package memdb
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 	//	"reflect"
 	"github.com/efigence/go-powerdns/api"
@@ -45,47 +46,39 @@ var testRecords = map[string]api.DNSRecord{
 
 func TestRecordInsert(t *testing.T) {
 	backend, err := New("t-data/dns.yaml")
-	Convey("load test data", t, func() {
-		So(err, ShouldEqual, nil)
-	})
-	Convey("Record insert", t, func() {
+	require.NoError(t, err)
 
-		So(backend.AddRecord(testRecords["wildcard"]), ShouldEqual, nil)
-		So(backend.AddRecord(testRecords["www"]), ShouldEqual, nil)
-		So(backend.AddRecord(testRecords["zone"]), ShouldEqual, nil)
-		q := api.QueryLookup{
-			QType: "A",
-			QName: "www.example.com",
-		}
-		res, err := backend.Lookup(q)
-		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, api.DNSRecordList{testRecords["www"]})
-	})
+	require.NoError(t, backend.AddRecord(testRecords["wildcard"]))
+	require.NoError(t, backend.AddRecord(testRecords["www"]))
+	require.NoError(t, backend.AddRecord(testRecords["zone"]))
+	q := api.QueryLookup{
+		QType: "A",
+		QName: "www.example.com",
+	}
+	res, err := backend.Lookup(q)
+	require.NoError(t, err)
+	assert.Equal(t, api.DNSRecordList{testRecords["www"]}, res)
 }
 
 func TestRecordLookup(t *testing.T) {
 	backend, _ := New("t-data/dns.yaml")
-	backend.AddRecord(testRecords["wildcard"])
-	backend.AddRecord(testRecords["www"])
-	backend.AddRecord(testRecords["www2"])
-	backend.AddRecord(testRecords["www3"])
-	backend.AddRecord(testRecords["zone"])
+	require.NoError(t, backend.AddRecord(testRecords["wildcard"]))
+	require.NoError(t, backend.AddRecord(testRecords["www"]))
+	require.NoError(t, backend.AddRecord(testRecords["www2"]))
+	require.NoError(t, backend.AddRecord(testRecords["www3"]))
+	require.NoError(t, backend.AddRecord(testRecords["zone"]))
+	q := api.QueryLookup{
+		QType: "A",
+		QName: "www.example.com",
+	}
+	res, err := backend.Lookup(q)
+	require.NoError(t, err)
+	// ShouldContain craps itself on structs, work around it
+	correctOutput := api.DNSRecordList{testRecords["www"], testRecords["www2"], testRecords["www3"]}
 
-	Convey("Lookup", t, func() {
-		q := api.QueryLookup{
-			QType: "A",
-			QName: "www.example.com",
-		}
-		res, err := backend.Lookup(q)
-		So(err, ShouldEqual, nil)
-		// ShouldContain craps itself on structs, work around it
-		correctOutput := api.DNSRecordList{testRecords["www"], testRecords["www2"], testRecords["www3"]}
-
-		sort.Sort(res)
-		sort.Sort(correctOutput)
-
-		So(res, ShouldResemble, correctOutput)
-	})
+	sort.Sort(res)
+	sort.Sort(correctOutput)
+	assert.Equal(t, correctOutput, res)
 }
 
 func TestRecordLookupAny(t *testing.T) {
@@ -96,19 +89,17 @@ func TestRecordLookupAny(t *testing.T) {
 	backend.AddRecord(testRecords["www3"])
 	backend.AddRecord(testRecords["zone"])
 
-	Convey("Lookup", t, func() {
-		q := api.QueryLookup{
-			QType: "ANY",
-			QName: "www.example.com",
-		}
-		res, err := backend.Lookup(q)
-		So(err, ShouldEqual, nil)
-		// ShouldContain craps itself on structs, work around it
-		correctOutput := api.DNSRecordList{testRecords["www"], testRecords["www2"], testRecords["www3"]}
+	q := api.QueryLookup{
+		QType: "ANY",
+		QName: "www.example.com",
+	}
+	res, err := backend.Lookup(q)
+	require.NoError(t, err)
+	correctOutput := api.DNSRecordList{testRecords["www"], testRecords["www2"], testRecords["www3"]}
 
-		sort.Sort(res)
-		sort.Sort(correctOutput)
+	sort.Sort(res)
+	sort.Sort(correctOutput)
 
-		So(res, ShouldResemble, correctOutput)
-	})
+	assert.Equal(t, correctOutput, res)
+
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/efigence/go-powerdns/api"
 	"github.com/efigence/go-powerdns/backend/schema"
 	"github.com/stretchr/testify/assert"
-	"reflect"
 	"sort"
 	"testing"
 )
@@ -78,15 +77,7 @@ func TestRecordList(t *testing.T) {
 	sort.Sort(res)
 	sort.Sort(correctOutput)
 
-	errmap := []bool{false, false, false}
-	for idx, val := range res {
-		if reflect.DeepEqual(testRecords["wildcard"], val) ||
-			reflect.DeepEqual(testRecords["www"], val) ||
-			reflect.DeepEqual(testRecords["zone"], val) {
-			errmap[idx] = true
-		}
-	}
-	assert.Equal(t, []bool{true, true, true}, errmap, "all returned records should match one of the test records")
+	assert.Equal(t, res, correctOutput)
 
 	// This assertion may not make sense, as res is a list, not a single record, but kept for parity
 	assert.Contains(t, res, testRecords["zone"], "result should contain the zone record")

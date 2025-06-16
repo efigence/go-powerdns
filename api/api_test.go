@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/efigence/go-powerdns/backend/schema"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	//	"reflect"
@@ -61,7 +62,7 @@ type testQLookup struct{}
 func (testQLookup) Lookup(q QueryLookup) (QueryResponse, error) {
 	var err error
 	res := NewResponse()
-	res.Result = []DNSRecord{
+	res.Result = []schema.DNSRecord{
 		{
 			QType:   "A",
 			QName:   "www.example.com",
@@ -77,7 +78,7 @@ type testQList struct{}
 func (testQList) List(q QueryList) (QueryResponse, error) {
 	var err error
 	res := NewResponse()
-	res.Result = []DNSRecord{
+	res.Result = []schema.DNSRecord{
 		{
 			QType:   "A",
 			QName:   "www.example.com",

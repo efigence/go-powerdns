@@ -2,6 +2,7 @@ package yamldb
 
 import (
 	"github.com/efigence/go-powerdns/api"
+	"github.com/efigence/go-powerdns/backend/schema"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"sort"
@@ -10,7 +11,7 @@ import (
 
 var testStrings []string
 
-var testRecords = map[string]api.DNSRecord{
+var testRecords = map[string]schema.DNSRecord{
 	"www": {
 		QType:   "A",
 		QName:   "www.example.com",
@@ -50,7 +51,7 @@ func TestRecordInsert(t *testing.T) {
 	}
 	res, err := backend.Lookup(q)
 	assert.NoError(t, err, "should lookup www record")
-	assert.Equal(t, api.DNSRecordList{testRecords["www"]}, res, "lookup should return the www record")
+	assert.Equal(t, schema.DNSRecordList{testRecords["www"]}, res, "lookup should return the www record")
 }
 
 func TestRecordList(t *testing.T) {
@@ -72,7 +73,7 @@ func TestRecordList(t *testing.T) {
 	res, err := backend.Lookup(q)
 	assert.NoError(t, err, "should lookup records")
 
-	correctOutput := api.DNSRecordList{testRecords["wildcard"], testRecords["www"], testRecords["zone"]}
+	correctOutput := schema.DNSRecordList{testRecords["wildcard"], testRecords["www"], testRecords["zone"]}
 
 	sort.Sort(res)
 	sort.Sort(correctOutput)

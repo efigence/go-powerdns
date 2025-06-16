@@ -2,7 +2,10 @@ package yamldb
 
 import (
 	"github.com/efigence/go-powerdns/api"
-	"os"
+	"github.com/efigence/go-powerdns/backend/memdb"
+	"github.com/efigence/go-powerdns/backend/schema"
+	"github.com/efigence/go-powerdns/backend/yamlloader"
+	"time"
 )
 
 func asdf() {
@@ -10,44 +13,37 @@ func asdf() {
 }
 
 func New(file string) (api.DomainBackend, error) {
-	var v YAMLDomains
-	data, err := os.Open(file)
+	data, err := yamlloader.Load(file)
 	if err != nil {
-		return &v, err
+		return nil, err
 	}
-	v.ParseDNS(data)
-	v.DomainRecords = make(map[string]map[string]api.DNSRecordList)
-	v.Domains = make(map[string]api.DNSDomain)
-	return &v, err
-}
+	db, _ := memdb.New()
+	for k1, v1 := range data {
+		db.AddDomain(schema.DNSDomain{
+			Name:     k1,
+			NS:       v1.NS,
+			Owner:    v1.Owner,
+			Serial:   uint32(time.Now().Second() / 1000),
+			Refresh:  86400,
+			Retry:    300,
+			Expiry:   864000,
+			Nxdomain: 100,
+		})
+		for k2, v2 := range v1.Records {
+			for _, z := range v2.A {
+				db.AddRecord(schema.DNSRecord{
+					QType:      "A",
+					QName:      k2 + "." + "k1",
+					Content:    z.String(),
+					Ttl:        int32(v1.Expiry.Seconds()),
+					DomainId:   0,
+					ScopeMask:  "",
+					AuthString: "",
+				})
+			}
 
-type YAMLDomains struct {
-	DomainRecords map[string]map[string]api.DNSRecordList
-	Domains       map[string]api.DNSDomain
-}
+		}
 
-// add domain to DB
-func (d *YAMLDomains) AddDomain(api.DNSDomain) error {
-	var err error
-	return err
-}
-
-// add records to DB
-func (d *YAMLDomains) AddRecord(record api.DNSRecord) error {
-	var err error
-	return err
-}
-
-// return records for query
-func (d *YAMLDomains) Lookup(api.QueryLookup) (api.DNSRecordList, error) {
-	var err error
-	r := make([]api.DNSRecord, 0)
-	return r, err
-}
-
-// return all records for domain (For AXFR-type requests)
-func (d *YAMLDomains) List(api.QueryList) (api.DNSRecordList, error) {
-	var err error
-	r := make([]api.DNSRecord, 0)
-	return r, err
+	}
+	return db, err
 }

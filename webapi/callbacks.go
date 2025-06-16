@@ -4,6 +4,7 @@ import (
 	"github.com/efigence/go-powerdns/api"
 	"github.com/efigence/go-powerdns/backend/ipredir"
 	"github.com/efigence/go-powerdns/backend/memdb"
+	"github.com/efigence/go-powerdns/backend/schema"
 )
 
 type dnsCB struct {
@@ -15,13 +16,13 @@ func newDNSBackend() (dnsCB, error) {
 	var v dnsCB
 	var err error
 	v.redirBackend, _ = ipredir.New("")
-	v.memBackend, _ = memdb.New("")
-	v.memBackend.AddDomain(api.DNSDomain{
-		Name:      "pdns.internal",
-		PrimaryNs: "ns1.pdns.internal",
-		Owner:     "hostmaster.pdns.internal",
+	v.memBackend, _ = memdb.New()
+	v.memBackend.AddDomain(schema.DNSDomain{
+		Name:  "pdns.internal",
+		NS:    []string{"ns1.pdns.internal"},
+		Owner: "hostmaster.pdns.internal",
 	})
-	v.memBackend.AddRecord(api.DNSRecord{
+	v.memBackend.AddRecord(schema.DNSRecord{
 		QType:   "A",
 		QName:   "pdns.internal",
 		Content: "127.0.0.1",

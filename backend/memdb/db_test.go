@@ -1,6 +1,7 @@
 package memdb
 
 import (
+	"github.com/efigence/go-powerdns/backend/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -11,7 +12,7 @@ import (
 
 var testStrings []string
 
-var testRecords = map[string]api.DNSRecord{
+var testRecords = map[string]schema.DNSRecord{
 	"www": {
 		QType:   "A",
 		QName:   "www.example.com",
@@ -45,7 +46,7 @@ var testRecords = map[string]api.DNSRecord{
 }
 
 func TestRecordInsert(t *testing.T) {
-	backend, err := New("t-data/dns.yaml")
+	backend, err := New()
 	require.NoError(t, err)
 
 	require.NoError(t, backend.AddRecord(testRecords["wildcard"]))
@@ -57,11 +58,11 @@ func TestRecordInsert(t *testing.T) {
 	}
 	res, err := backend.Lookup(q)
 	require.NoError(t, err)
-	assert.Equal(t, api.DNSRecordList{testRecords["www"]}, res)
+	assert.Equal(t, schema.DNSRecordList{testRecords["www"]}, res)
 }
 
 func TestRecordLookup(t *testing.T) {
-	backend, _ := New("t-data/dns.yaml")
+	backend, _ := New()
 	require.NoError(t, backend.AddRecord(testRecords["wildcard"]))
 	require.NoError(t, backend.AddRecord(testRecords["www"]))
 	require.NoError(t, backend.AddRecord(testRecords["www2"]))
@@ -74,7 +75,7 @@ func TestRecordLookup(t *testing.T) {
 	res, err := backend.Lookup(q)
 	require.NoError(t, err)
 	// ShouldContain craps itself on structs, work around it
-	correctOutput := api.DNSRecordList{testRecords["www"], testRecords["www2"], testRecords["www3"]}
+	correctOutput := schema.DNSRecordList{testRecords["www"], testRecords["www2"], testRecords["www3"]}
 
 	sort.Sort(res)
 	sort.Sort(correctOutput)
@@ -82,7 +83,7 @@ func TestRecordLookup(t *testing.T) {
 }
 
 func TestRecordLookupAny(t *testing.T) {
-	backend, _ := New("t-data/dns.yaml")
+	backend, _ := New()
 	backend.AddRecord(testRecords["wildcard"])
 	backend.AddRecord(testRecords["www"])
 	backend.AddRecord(testRecords["www2"])
@@ -95,7 +96,7 @@ func TestRecordLookupAny(t *testing.T) {
 	}
 	res, err := backend.Lookup(q)
 	require.NoError(t, err)
-	correctOutput := api.DNSRecordList{testRecords["www"], testRecords["www2"], testRecords["www3"]}
+	correctOutput := schema.DNSRecordList{testRecords["www"], testRecords["www2"], testRecords["www3"]}
 
 	sort.Sort(res)
 	sort.Sort(correctOutput)

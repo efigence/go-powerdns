@@ -1,6 +1,7 @@
 package ipredir
 
 import (
+	"github.com/efigence/go-powerdns/backend/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -11,7 +12,7 @@ import (
 
 var testStrings []string
 
-var testRecords = map[string]api.DNSRecord{
+var testRecords = map[string]schema.DNSRecord{
 	"www": {
 		QType:   "A",
 		QName:   "www.example.com",
@@ -56,7 +57,7 @@ func TestRecordInsert(t *testing.T) {
 	}
 	res, err := backend.Lookup(q)
 	assert.NoError(t, err)
-	assert.Equal(t, res, api.DNSRecordList{})
+	assert.Equal(t, res, schema.DNSRecordList{})
 }
 
 func TestRecordLookup(t *testing.T) {
@@ -75,7 +76,7 @@ func TestRecordLookup(t *testing.T) {
 	res, err := backend.Lookup(q)
 	require.NoError(t, err)
 	// ShouldContain craps itself on structs, work around it
-	correctOutput := api.DNSRecordList{}
+	correctOutput := schema.DNSRecordList{}
 
 	sort.Sort(res)
 	sort.Sort(correctOutput)

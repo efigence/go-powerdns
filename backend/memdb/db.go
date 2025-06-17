@@ -6,16 +6,12 @@ import (
 	//	"gopkg.in/mem.v2"
 )
 
-func New() (DomainBackend, error) {
+func New() (*MemDomains, error) {
 	var v MemDomains
 	var err error
 	v.DomainRecords = make(map[string]map[string]schema.DNSRecordList)
 	v.Domains = make(map[string]schema.DNSDomain)
 	return &v, err
-}
-
-type DomainBackend interface {
-	api.DomainBackend
 }
 
 type MemDomains struct {

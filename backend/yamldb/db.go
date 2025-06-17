@@ -12,14 +12,22 @@ func asdf() {
 	_, _ = api.New(api.CallbackList{})
 }
 
-func New(file string) (api.DomainBackend, error) {
+type YAMLDB struct {
+	db *memdb.MemDomains
+}
+
+func New() (*YAMLDB, error) {
+	backend := YAMLDB{}
+	backend.db, _ = memdb.New()
+	return &backend, nil
+}
+func (db *YAMLDB) LoadFile(file string) error {
 	data, err := yamlloader.Load(file)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	db, _ := memdb.New()
 	for k1, v1 := range data {
-		db.AddDomain(schema.DNSDomain{
+		db.db.AddDomain(schema.DNSDomain{
 			Name:     k1,
 			NS:       v1.NS,
 			Owner:    v1.Owner,
@@ -30,20 +38,30 @@ func New(file string) (api.DomainBackend, error) {
 			Nxdomain: 100,
 		})
 		for k2, v2 := range v1.Records {
+			ttl := v1.Expiry
+			if v2.TTL.Seconds() > 0 {
+				ttl = v2.TTL
+			}
 			for _, z := range v2.A {
-				db.AddRecord(schema.DNSRecord{
+				db.db.AddRecord(schema.DNSRecord{
 					QType:      "A",
-					QName:      k2 + "." + "k1",
+					QName:      k2 + "." + k1,
 					Content:    z.String(),
-					Ttl:        int32(v1.Expiry.Seconds()),
+					Ttl:        int32(ttl.Seconds()),
 					DomainId:   0,
 					ScopeMask:  "",
 					AuthString: "",
 				})
 			}
-
 		}
-
 	}
-	return db, err
+	//pp.Print(db.db.DomainRecords)
+	return nil
+}
+
+func (db *YAMLDB) Lookup(q api.QueryLookup) (schema.DNSRecordList, error) {
+	return db.db.Lookup(q)
+}
+func (db *YAMLDB) List(q api.QueryList) (schema.DNSRecordList, error) {
+	return db.db.List(q)
 }

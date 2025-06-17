@@ -9,7 +9,7 @@ import (
 
 type dnsCB struct {
 	redirBackend ipredir.DomainBackend
-	memBackend   memdb.DomainBackend
+	memBackend   *memdb.MemDomains
 }
 
 func newDNSBackend() (dnsCB, error) {

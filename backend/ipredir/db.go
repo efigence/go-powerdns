@@ -18,7 +18,7 @@ func New(file string) (DomainBackend, error) {
 }
 
 type DomainBackend interface {
-	api.DomainBackend
+	api.DomainReadWriter
 	AddRedirIp(srcIp string, target string) error
 	DeleteRedirIp(string) error
 	SetRedirIp(map[string]string) error

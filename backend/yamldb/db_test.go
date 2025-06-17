@@ -4,18 +4,24 @@ import (
 	"github.com/efigence/go-powerdns/api"
 	"github.com/efigence/go-powerdns/backend/schema"
 	"github.com/stretchr/testify/assert"
-	"sort"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 var testStrings []string
 
 var testRecords = map[string]schema.DNSRecord{
-	"www": {
+	"www1": {
 		QType:   "A",
 		QName:   "www.example.com",
-		Content: "1.2.3.4",
-		Ttl:     60,
+		Content: "3.4.5.6",
+		Ttl:     3000,
+	},
+	"www2": {
+		QType:   "A",
+		QName:   "www.example.com",
+		Content: "3.4.5.7",
+		Ttl:     3000,
 	},
 	"zone": {
 		QType:   "A",
@@ -31,39 +37,9 @@ var testRecords = map[string]schema.DNSRecord{
 	},
 }
 
-func TestRecordInsert(t *testing.T) {
-	backend, err := New("t-data/dns.yaml")
-	assert.NoError(t, err, "should load test data")
-
-	err = backend.AddRecord(testRecords["wildcard"])
-	assert.NoError(t, err, "should add wildcard record")
-
-	err = backend.AddRecord(testRecords["www"])
-	assert.NoError(t, err, "should add www record")
-
-	err = backend.AddRecord(testRecords["zone"])
-	assert.NoError(t, err, "should add zone record")
-
-	q := api.QueryLookup{
-		QType: "A",
-		QName: "www.example.com",
-	}
-	res, err := backend.Lookup(q)
-	assert.NoError(t, err, "should lookup www record")
-	assert.Equal(t, schema.DNSRecordList{testRecords["www"]}, res, "lookup should return the www record")
-}
-
 func TestRecordList(t *testing.T) {
-	backend, _ := New("t-data/dns.yaml")
-
-	err := backend.AddRecord(testRecords["wildcard"])
-	assert.NoError(t, err, "should add wildcard record")
-
-	err = backend.AddRecord(testRecords["www"])
-	assert.NoError(t, err, "should add www record")
-
-	err = backend.AddRecord(testRecords["zone"])
-	assert.NoError(t, err, "should add zone record")
+	backend, _ := New()
+	require.NoError(t, backend.LoadFile("t-data/dns.yaml"))
 
 	q := api.QueryLookup{
 		QType: "A",
@@ -71,14 +47,9 @@ func TestRecordList(t *testing.T) {
 	}
 	res, err := backend.Lookup(q)
 	assert.NoError(t, err, "should lookup records")
+	assert.Len(t, res, 2)
+	assert.NotContains(t, res, testRecords["wildcard"])
+	assert.Contains(t, res, testRecords["www1"])
+	assert.Contains(t, res, testRecords["www2"])
 
-	correctOutput := schema.DNSRecordList{testRecords["wildcard"], testRecords["www"], testRecords["zone"]}
-
-	sort.Sort(res)
-	sort.Sort(correctOutput)
-
-	assert.Equal(t, res, correctOutput)
-
-	// This assertion may not make sense, as res is a list, not a single record, but kept for parity
-	assert.Contains(t, res, testRecords["zone"], "result should contain the zone record")
 }

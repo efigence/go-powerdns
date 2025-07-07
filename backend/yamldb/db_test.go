@@ -51,5 +51,8 @@ func TestRecordList(t *testing.T) {
 	assert.NotContains(t, res, testRecords["wildcard"])
 	assert.Contains(t, res, testRecords["www1"])
 	assert.Contains(t, res, testRecords["www2"])
-
+	list, err := backend.List(api.QueryList{
+		ZoneName: "example.com",
+	})
+	assert.Len(t, list, 4)
 }

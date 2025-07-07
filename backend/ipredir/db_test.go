@@ -1,6 +1,7 @@
 package ipredir
 
 import (
+	"github.com/efigence/go-powerdns/backend/memdb"
 	"github.com/efigence/go-powerdns/backend/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -46,8 +47,13 @@ var testRecords = map[string]schema.DNSRecord{
 }
 
 func TestRecordInsert(t *testing.T) {
-	backend, err := New("t-data/dns.yaml")
+	mdb := memdb.New()
+	backend, err := New(mdb)
 	require.NoError(t, err)
+	mdb.AddDomain(schema.DNSDomain{
+		Name: "example.com",
+		NS:   []string{"ns1.example.com"},
+	})
 	assert.NoError(t, backend.AddRecord(testRecords["wildcard"]))
 	assert.NoError(t, backend.AddRecord(testRecords["www"]))
 	assert.NoError(t, backend.AddRecord(testRecords["zone"]))
@@ -58,10 +64,12 @@ func TestRecordInsert(t *testing.T) {
 	res, err := backend.Lookup(q)
 	assert.NoError(t, err)
 	assert.Equal(t, res, schema.DNSRecordList{})
+	dom, err := backend.GetRootDomainFor("zone.example.com")
+	assert.Equal(t, "example.com", dom)
 }
 
 func TestRecordLookup(t *testing.T) {
-	backend, err := New("t-data/dns.yaml")
+	backend, err := New(memdb.New())
 	require.NoError(t, err)
 	assert.NoError(t, backend.AddRecord(testRecords["wildcard"]))
 	assert.NoError(t, backend.AddRecord(testRecords["www"]))
@@ -85,7 +93,7 @@ func TestRecordLookup(t *testing.T) {
 }
 
 func BenchmarkRecordLookup(b *testing.B) {
-	backend, _ := New("t-data/dns.yaml")
+	backend, _ := New(memdb.New())
 	backend.AddRecord(testRecords["wildcard"])
 	backend.AddRecord(testRecords["www"])
 	backend.AddRecord(testRecords["www2"])
@@ -103,7 +111,7 @@ func BenchmarkRecordLookup(b *testing.B) {
 }
 
 func TestRedir(t *testing.T) {
-	backend, _ := New("")
+	backend, _ := New(memdb.New())
 	backend.AddRedirIp("127.0.0.1", "127.0.0.2")
 
 	t.Run("Adding IP", func(t *testing.T) {

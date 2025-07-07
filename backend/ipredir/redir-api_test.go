@@ -1,12 +1,13 @@
 package ipredir
 
 import (
+	"github.com/efigence/go-powerdns/backend/memdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-var backend, _ = New("")
+var backend, _ = New(memdb.New())
 
 func TestAdd(t *testing.T) {
 	t.Run("Add IP redir", func(t *testing.T) {
@@ -54,6 +55,10 @@ func TestAdd(t *testing.T) {
 			assert.Equal(t, "7.3.3.3", redirIp["7.2.2.2"])
 		})
 
+	})
+	t.Run("bad IP", func(t *testing.T) {
+		assert.Error(t, backend.AddRedirIp("256.254.254.254", "1.2.3.4"))
+		assert.Error(t, backend.AddRedirIp("1.2.3.4", "999.1.1.1"))
 	})
 
 }

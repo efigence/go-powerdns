@@ -10,8 +10,9 @@ import (
 	//	"gopkg.in/mem.v2"
 )
 
-func New(file string) (DomainBackend, error) {
+func New(backend api.DomainReader) (*ipredirDomains, error) {
 	var v ipredirDomains
+	v.backend = backend
 	var err error
 	v.redirMap = make(map[string]string)
 	return &v, err
@@ -27,6 +28,7 @@ type DomainBackend interface {
 
 type ipredirDomains struct {
 	// map of host ip -> target IP redir
+	backend  api.DomainReader
 	redirMap map[string]string
 	sync.RWMutex
 }
@@ -42,6 +44,9 @@ func (d *ipredirDomains) AddRecord(record schema.DNSRecord) error {
 	var err error
 
 	return err
+}
+func (d *ipredirDomains) GetRootDomainFor(s string) (string, error) {
+	return d.backend.GetRootDomainFor(s)
 }
 
 // Returns nil if request should not be redirected and DNS records if it should

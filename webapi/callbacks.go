@@ -15,8 +15,8 @@ type dnsCB struct {
 func newDNSBackend() (dnsCB, error) {
 	var v dnsCB
 	var err error
-	v.redirBackend, _ = ipredir.New("")
-	v.memBackend, _ = memdb.New()
+	v.memBackend = memdb.New()
+	v.redirBackend, _ = ipredir.New(v.memBackend)
 	v.memBackend.AddDomain(schema.DNSDomain{
 		Name:  "pdns.internal",
 		NS:    []string{"ns1.pdns.internal"},

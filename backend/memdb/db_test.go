@@ -2,7 +2,6 @@ package memdb
 
 import (
 	"github.com/efigence/go-powerdns/backend/schema"
-	"github.com/k0kubun/pp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -47,12 +46,11 @@ var testRecords = map[string]schema.DNSRecord{
 }
 
 func TestMemDomains_AddDomain(t *testing.T) {
-	backend, _ := New()
+	backend := New()
 	require.NoError(t, backend.AddDomain(schema.DNSDomain{
 		Name: "www.example2.com",
 		NS:   []string{"ns1.example.com"},
 	}))
-	pp.Print(backend.Domains)
 	assert.NotEmpty(t, backend.Domains["www.example2.com"].Owner)
 	assert.Greater(t, backend.Domains["www.example2.com"].Refresh, int32(0))
 	assert.Greater(t, backend.Domains["www.example2.com"].Retry, int32(0))
@@ -61,8 +59,11 @@ func TestMemDomains_AddDomain(t *testing.T) {
 }
 
 func TestRecordInsert(t *testing.T) {
-	backend, err := New()
-	require.NoError(t, err)
+	backend := New()
+	require.NoError(t, backend.AddDomain(schema.DNSDomain{
+		Name: "example.com",
+		NS:   []string{"ns1.example.com"},
+	}))
 	require.NoError(t, backend.AddRecord(testRecords["wildcard"]))
 	require.NoError(t, backend.AddRecord(testRecords["www"]))
 	require.NoError(t, backend.AddRecord(testRecords["zone"]))
@@ -76,11 +77,15 @@ func TestRecordInsert(t *testing.T) {
 	list, err := backend.List(api.QueryList{
 		ZoneName: "example.com",
 	})
-	assert.Len(t, list, 3)
+	assert.Len(t, list, 4)
 }
 
 func TestRecordLookup(t *testing.T) {
-	backend, _ := New()
+	backend := New()
+	require.NoError(t, backend.AddDomain(schema.DNSDomain{
+		Name: "example.com",
+		NS:   []string{"ns1.example.com"},
+	}))
 	require.NoError(t, backend.AddRecord(testRecords["wildcard"]))
 	require.NoError(t, backend.AddRecord(testRecords["www"]))
 	require.NoError(t, backend.AddRecord(testRecords["www2"]))
@@ -101,7 +106,11 @@ func TestRecordLookup(t *testing.T) {
 }
 
 func TestRecordLookupAny(t *testing.T) {
-	backend, _ := New()
+	backend := New()
+	require.NoError(t, backend.AddDomain(schema.DNSDomain{
+		Name: "example.com",
+		NS:   []string{"ns1.example.com"},
+	}))
 	backend.AddRecord(testRecords["wildcard"])
 	backend.AddRecord(testRecords["www"])
 	backend.AddRecord(testRecords["www2"])
@@ -120,5 +129,36 @@ func TestRecordLookupAny(t *testing.T) {
 	sort.Sort(correctOutput)
 
 	assert.Equal(t, correctOutput, res)
+
+}
+
+func TestMemDomains_GetRootDomainFor(t *testing.T) {
+	backend := New()
+	require.NoError(t, backend.AddDomain(schema.DNSDomain{
+		Name: "example.com",
+		NS:   []string{"ns1.example.com"},
+	}))
+	dom, err := backend.GetRootDomainFor("very.long.test.www.example.com")
+	assert.NoError(t, err)
+	assert.Equal(t, "example.com", dom)
+
+	require.NoError(t, backend.AddDomain(schema.DNSDomain{
+		Name: "www.example.com",
+		NS:   []string{"ns1.example.com"},
+	}))
+	dom, err = backend.GetRootDomainFor("very.long.test.www.example.com")
+	assert.NoError(t, err)
+	assert.Equal(t, "www.example.com", dom)
+
+	require.NoError(t, backend.AddDomain(schema.DNSDomain{
+		Name: "very.long.test.www.example.com",
+		NS:   []string{"ns1.example.com"},
+	}))
+	dom, err = backend.GetRootDomainFor("very.long.test.www.example.com")
+	assert.NoError(t, err)
+	assert.Equal(t, "very.long.test.www.example.com", dom)
+
+	dom, err = backend.GetRootDomainFor("very.long.test.www.example2.com")
+	assert.Error(t, err)
 
 }

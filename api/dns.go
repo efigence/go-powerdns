@@ -8,9 +8,17 @@ import (
 
 // interface for backend
 
+type NXDomain struct{ Domain string }
+
+func (n *NXDomain) Error() string {
+	return "domain " + n.Domain + " not found"
+}
+
 type DomainReader interface {
 	Lookup(q QueryLookup) (schema.DNSRecordList, error)
 	List(q QueryList) (schema.DNSRecordList, error)
+	// Find root domain for a given subdomain. Return NXDomain if it does not exist, anything else is db error
+	GetRootDomainFor(string) (string, error)
 }
 type DomainWriter interface {
 	// Add domain; that should also generate SOA record and AddRecord() it if backend doesn't handle that

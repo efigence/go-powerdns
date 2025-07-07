@@ -1,18 +1,20 @@
 package webapi
 
 import (
-	//	"github.com/unrolled/render" // or "gopkg.in/unrolled/render.v1")
+	"github.com/gin-gonic/gin"
+
 	"bytes"
 	"github.com/op/go-logging"
-	"github.com/zenazn/goji/web"
+	//	"github.com/unrolled/render" // or "gopkg.in/unrolled/render.v1")
 	"net/http"
 )
 
 var log = logging.MustGetLogger("main")
 
-func (w *WebApp) Dns(c web.C, wr http.ResponseWriter, r *http.Request) {
+func (w *WebBackend) Dns(c *gin.Context) {
+	// FIXME
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(r.Body)
+	buf.ReadFrom(c.Request.Body)
 	s := buf.String()
 	log.Warning(s)
 	resp, err := w.dnsApi.Parse(s)
@@ -20,5 +22,5 @@ func (w *WebApp) Dns(c web.C, wr http.ResponseWriter, r *http.Request) {
 		log.Error("failure on responding query: %+v", err)
 	}
 
-	w.render.JSON(wr, http.StatusOK, resp)
+	c.JSON(http.StatusOK, resp)
 }

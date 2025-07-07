@@ -2,8 +2,8 @@ package webapi
 
 import (
 	"encoding/json"
-	"github.com/zenazn/goji/web"
-	"io/ioutil"
+	"github.com/gin-gonic/gin"
+	"io"
 	"net/http"
 )
 
@@ -11,49 +11,55 @@ var respOk = map[string]string{
 	"response": "ok",
 }
 
-func (w *WebApp) AddRedir(c web.C, wr http.ResponseWriter, r *http.Request) {
-	from := c.URLParams["from"]
-	to := c.URLParams["to"]
+func respErr(e error) map[string]string {
+	return map[string]string{
+		"err": e.Error(),
+	}
+}
+
+// func (w *WebApp) AddRedir(c web.C, wr http.ResponseWriter, r *http.Request) {
+func (w *WebBackend) AddRedir(c *gin.Context) {
+	from := c.Param("from")
+	to := c.Param("to")
 	err := w.dnsBackend.redirBackend.AddRedirIp(from, to)
 	if err == nil {
-		w.render.JSON(wr, http.StatusOK, respOk)
+		c.JSON(http.StatusOK, respOk)
 	} else {
-		w.render.JSON(wr, http.StatusOK, respErr(err))
+		c.JSON(http.StatusBadRequest, respErr(err))
 	}
 
 }
-func (w *WebApp) BatchAddRedir(c web.C, wr http.ResponseWriter, r *http.Request) {
-	raw, err := ioutil.ReadAll(r.Body)
+func (w *WebBackend) BatchAddRedir(c *gin.Context) {
+	raw, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		w.render.JSON(wr, http.StatusOK, respErr(err))
+		c.JSON(http.StatusOK, respErr(err))
 		return
 	}
 	ipList := make(map[string]string)
 	err = json.Unmarshal(raw, &ipList)
 	if err != nil {
-		w.render.JSON(wr, http.StatusOK, respErr(err))
+		c.JSON(http.StatusOK, respErr(err))
 		return
 	}
 	err = w.dnsBackend.redirBackend.SetRedirIp(ipList)
 	if err != nil {
-		w.render.JSON(wr, http.StatusOK, respErr(err))
+		c.JSON(http.StatusOK, respErr(err))
 		return
 	}
 	log.Notice("loaded %d IPs", len(ipList))
-	w.render.JSON(wr, http.StatusOK, respOk)
+	c.JSON(http.StatusOK, respOk)
 }
-func (w *WebApp) DeleteRedir(c web.C, wr http.ResponseWriter, r *http.Request) {
-	from := c.URLParams["from"]
+func (w *WebBackend) DeleteRedir(c *gin.Context) {
+	from := c.Param("from")
 	err := w.dnsBackend.redirBackend.DeleteRedirIp(from)
 	if err == nil {
-		w.render.JSON(wr, http.StatusOK, respOk)
+		c.JSON(http.StatusOK, respOk)
 	} else {
-		w.render.JSON(wr, http.StatusOK, respErr(err))
+		c.JSON(http.StatusOK, respErr(err))
 	}
 }
 
-func (w *WebApp) ListRedir(c web.C, wr http.ResponseWriter, r *http.Request) {
+func (w *WebBackend) ListRedir(c *gin.Context) {
 	list, _ := w.dnsBackend.redirBackend.ListRedirIp()
-
-	w.render.JSON(wr, http.StatusOK, list)
+	c.JSON(http.StatusOK, list)
 }

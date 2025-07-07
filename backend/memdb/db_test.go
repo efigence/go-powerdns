@@ -2,6 +2,7 @@ package memdb
 
 import (
 	"github.com/efigence/go-powerdns/backend/schema"
+	"github.com/k0kubun/pp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -45,10 +46,23 @@ var testRecords = map[string]schema.DNSRecord{
 	},
 }
 
+func TestMemDomains_AddDomain(t *testing.T) {
+	backend, _ := New()
+	require.NoError(t, backend.AddDomain(schema.DNSDomain{
+		Name: "www.example2.com",
+		NS:   []string{"ns1.example.com"},
+	}))
+	pp.Print(backend.Domains)
+	assert.NotEmpty(t, backend.Domains["www.example2.com"].Owner)
+	assert.Greater(t, backend.Domains["www.example2.com"].Refresh, int32(0))
+	assert.Greater(t, backend.Domains["www.example2.com"].Retry, int32(0))
+	assert.Greater(t, backend.Domains["www.example2.com"].Expiry, int32(0))
+	assert.Greater(t, backend.Domains["www.example2.com"].Nxdomain, int32(0))
+}
+
 func TestRecordInsert(t *testing.T) {
 	backend, err := New()
 	require.NoError(t, err)
-
 	require.NoError(t, backend.AddRecord(testRecords["wildcard"]))
 	require.NoError(t, backend.AddRecord(testRecords["www"]))
 	require.NoError(t, backend.AddRecord(testRecords["zone"]))
@@ -59,6 +73,10 @@ func TestRecordInsert(t *testing.T) {
 	res, err := backend.Lookup(q)
 	require.NoError(t, err)
 	assert.Equal(t, schema.DNSRecordList{testRecords["www"]}, res)
+	list, err := backend.List(api.QueryList{
+		ZoneName: "example.com",
+	})
+	assert.Len(t, list, 3)
 }
 
 func TestRecordLookup(t *testing.T) {

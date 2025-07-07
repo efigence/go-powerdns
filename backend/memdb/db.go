@@ -38,6 +38,7 @@ func (d *MemDomains) AddDomain(domain schema.DNSDomain) error {
 	if domain.Nxdomain == 0 {
 		domain.Nxdomain = 60 * 30
 	}
+	d.Domains[domain.Name] = domain
 	d.AddRecord(schema.GenerateSoaFromDomain(domain))
 	return err
 }

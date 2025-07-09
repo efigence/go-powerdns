@@ -1,4 +1,6 @@
-package api
+package schema
+
+import "fmt"
 
 // API calls
 // https://doc.powerdns.com/md/authoritative/backend-remote/ for full docs
@@ -14,6 +16,10 @@ type QueryLookup struct {
 	RealRemote string `json:"real-remote"` // optional
 	// -1 if unknown
 	ZoneId int `json:"zone-id"`
+}
+
+func (data QueryLookup) Dump() string {
+	return fmt.Sprintf("%+v", data)
 }
 
 type QueryList struct {

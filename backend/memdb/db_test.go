@@ -1,12 +1,11 @@
 package memdb
 
 import (
-	"github.com/efigence/go-powerdns/backend/schema"
+	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
-	//	"reflect"
-	"github.com/efigence/go-powerdns/api"
+
 	"sort"
 )
 
@@ -67,14 +66,14 @@ func TestRecordInsert(t *testing.T) {
 	require.NoError(t, backend.AddRecord(testRecords["wildcard"]))
 	require.NoError(t, backend.AddRecord(testRecords["www"]))
 	require.NoError(t, backend.AddRecord(testRecords["zone"]))
-	q := api.QueryLookup{
+	q := schema.QueryLookup{
 		QType: "A",
 		QName: "www.example.com",
 	}
 	res, err := backend.Lookup(q)
 	require.NoError(t, err)
 	assert.Equal(t, schema.DNSRecordList{testRecords["www"]}, res)
-	list, err := backend.List(api.QueryList{
+	list, err := backend.List(schema.QueryList{
 		ZoneName: "example.com",
 	})
 	assert.Len(t, list, 4)
@@ -91,7 +90,7 @@ func TestRecordLookup(t *testing.T) {
 	require.NoError(t, backend.AddRecord(testRecords["www2"]))
 	require.NoError(t, backend.AddRecord(testRecords["www3"]))
 	require.NoError(t, backend.AddRecord(testRecords["zone"]))
-	q := api.QueryLookup{
+	q := schema.QueryLookup{
 		QType: "A",
 		QName: "www.example.com",
 	}
@@ -117,7 +116,7 @@ func TestRecordLookupAny(t *testing.T) {
 	backend.AddRecord(testRecords["www3"])
 	backend.AddRecord(testRecords["zone"])
 
-	q := api.QueryLookup{
+	q := schema.QueryLookup{
 		QType: "ANY",
 		QName: "www.example.com",
 	}

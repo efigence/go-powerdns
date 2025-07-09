@@ -1,6 +1,7 @@
-package api
+package schema
 
 // JSONable response to pdns
+
 type QueryResponse struct {
 	Result interface{} `json:"result"`
 }

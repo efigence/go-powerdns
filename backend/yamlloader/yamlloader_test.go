@@ -1,7 +1,7 @@
 package yamlloader
 
 import (
-	"github.com/efigence/go-powerdns/backend/schema"
+	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net"

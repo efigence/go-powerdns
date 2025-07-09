@@ -21,7 +21,7 @@ func respErr(e error) map[string]string {
 func (w *WebBackend) AddRedir(c *gin.Context) {
 	from := c.Param("from")
 	to := c.Param("to")
-	err := w.dnsBackend.redirBackend.AddRedirIp(from, to)
+	err := w.redirApi.AddRedirIp(from, to)
 	if err == nil {
 		c.JSON(http.StatusOK, respOk)
 	} else {
@@ -41,7 +41,7 @@ func (w *WebBackend) BatchAddRedir(c *gin.Context) {
 		c.JSON(http.StatusOK, respErr(err))
 		return
 	}
-	err = w.dnsBackend.redirBackend.SetRedirIp(ipList)
+	err = w.redirApi.SetRedirIp(ipList)
 	if err != nil {
 		c.JSON(http.StatusOK, respErr(err))
 		return
@@ -51,7 +51,7 @@ func (w *WebBackend) BatchAddRedir(c *gin.Context) {
 }
 func (w *WebBackend) DeleteRedir(c *gin.Context) {
 	from := c.Param("from")
-	err := w.dnsBackend.redirBackend.DeleteRedirIp(from)
+	err := w.redirApi.DeleteRedirIp(from)
 	if err == nil {
 		c.JSON(http.StatusOK, respOk)
 	} else {
@@ -60,6 +60,6 @@ func (w *WebBackend) DeleteRedir(c *gin.Context) {
 }
 
 func (w *WebBackend) ListRedir(c *gin.Context) {
-	list, _ := w.dnsBackend.redirBackend.ListRedirIp()
+	list, _ := w.redirApi.ListRedirIp()
 	c.JSON(http.StatusOK, list)
 }

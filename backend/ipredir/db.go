@@ -3,14 +3,13 @@ package ipredir
 import (
 	"errors"
 	"fmt"
-	"github.com/efigence/go-powerdns/api"
-	"github.com/efigence/go-powerdns/backend/schema"
+	"github.com/efigence/go-powerdns/schema"
 	"strings"
 	"sync"
 	//	"gopkg.in/mem.v2"
 )
 
-func New(backend api.DomainReader) (*ipredirDomains, error) {
+func New(backend schema.DomainReader) (*ipredirDomains, error) {
 	var v ipredirDomains
 	v.backend = backend
 	var err error
@@ -18,17 +17,9 @@ func New(backend api.DomainReader) (*ipredirDomains, error) {
 	return &v, err
 }
 
-type DomainBackend interface {
-	api.DomainReadWriter
-	AddRedirIp(srcIp string, target string) error
-	DeleteRedirIp(string) error
-	SetRedirIp(map[string]string) error
-	ListRedirIp() (map[string]string, error)
-}
-
 type ipredirDomains struct {
 	// map of host ip -> target IP redir
-	backend  api.DomainReader
+	backend  schema.DomainReader
 	redirMap map[string]string
 	sync.RWMutex
 }
@@ -50,7 +41,7 @@ func (d *ipredirDomains) GetRootDomainFor(s string) (string, error) {
 }
 
 // Returns nil if request should not be redirected and DNS records if it should
-func (d *ipredirDomains) Lookup(query api.QueryLookup) (schema.DNSRecordList, error) {
+func (d *ipredirDomains) Lookup(query schema.QueryLookup) (schema.DNSRecordList, error) {
 	var err error
 	if val, ok := d.redirMap[query.Remote]; ok {
 		if query.QType == "SOA" {
@@ -90,7 +81,7 @@ func (d *ipredirDomains) Lookup(query api.QueryLookup) (schema.DNSRecordList, er
 
 // return all records for domain (For AXFR-type requests)
 // Returns nil if request should not be redirected and DNS records if it should
-func (d *ipredirDomains) List(api.QueryList) (schema.DNSRecordList, error) {
+func (d *ipredirDomains) List(schema.QueryList) (schema.DNSRecordList, error) {
 	var err error
 	return schema.DNSRecordList{}, err
 	return nil, err

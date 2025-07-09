@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/efigence/go-mon"
 	"github.com/efigence/go-powerdns/api"
+	"github.com/efigence/go-powerdns/backend/memdb"
+	"github.com/efigence/go-powerdns/schema"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -15,18 +17,21 @@ import (
 )
 
 type WebBackend struct {
-	l          *zap.SugaredLogger
-	al         *zap.SugaredLogger
-	r          *gin.Engine
-	cfg        *Config
-	dnsBackend dnsCB
-	dnsApi     api.Api
+	l        *zap.SugaredLogger
+	al       *zap.SugaredLogger
+	r        *gin.Engine
+	cfg      *Config
+	dns      schema.DomainReader
+	redirApi schema.IPRedir
+	dnsApi   api.Api
 }
 
 type Config struct {
 	Logger       *zap.SugaredLogger `yaml:"-"`
 	AccessLogger *zap.SugaredLogger `yaml:"-"`
 	ListenAddr   string             `yaml:"listen_addr"`
+	DNSBackend   schema.DomainReadWriter
+	RedirBackend schema.IPRedir
 }
 
 func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
@@ -37,22 +42,16 @@ func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
 		panic("missing listen addr")
 	}
 	w := WebBackend{
-		l:   cfg.Logger,
-		al:  cfg.AccessLogger,
-		cfg: &cfg,
+		l:        cfg.Logger,
+		al:       cfg.AccessLogger,
+		dns:      cfg.DNSBackend,
+		redirApi: cfg.RedirBackend,
+		cfg:      &cfg,
 	}
 	if cfg.AccessLogger == nil {
 		w.al = w.l //.Named("accesslog")
 	}
-	w.dnsBackend, err = newDNSBackend()
-	if err != nil {
-		return nil, err
-	}
-	cbList := api.CallbackList{
-		Lookup: w.dnsBackend,
-		List:   w.dnsBackend,
-	}
-	w.dnsApi, err = api.New(cbList)
+	w.dnsApi, err = api.New(memdb.New())
 	r := gin.New()
 	w.r = r
 	gin.SetMode(gin.ReleaseMode)

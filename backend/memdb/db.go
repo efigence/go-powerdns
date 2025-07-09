@@ -2,8 +2,7 @@ package memdb
 
 import (
 	"fmt"
-	"github.com/efigence/go-powerdns/api"
-	"github.com/efigence/go-powerdns/backend/schema"
+	"github.com/efigence/go-powerdns/schema"
 	"strings"
 	//	"gopkg.in/mem.v2"
 )
@@ -38,7 +37,7 @@ func (d *MemDomains) GetRootDomainFor(dom string) (root string, err error) {
 			return dd, nil
 		}
 	}
-	return "", &api.NXDomain{Domain: dom}
+	return "", &schema.NXDomain{Domain: dom}
 }
 
 // add domain to DB
@@ -87,7 +86,7 @@ func (d *MemDomains) AddRecord(record schema.DNSRecord) error {
 }
 
 // return records for query
-func (d *MemDomains) Lookup(query api.QueryLookup) (schema.DNSRecordList, error) {
+func (d *MemDomains) Lookup(query schema.QueryLookup) (schema.DNSRecordList, error) {
 	var err error
 	if query.QType == `ANY` {
 		var recordsAny schema.DNSRecordList
@@ -101,7 +100,7 @@ func (d *MemDomains) Lookup(query api.QueryLookup) (schema.DNSRecordList, error)
 }
 
 // return all records for domain (For AXFR-type requests)
-func (d *MemDomains) List(q api.QueryList) (r schema.DNSRecordList, err error) {
+func (d *MemDomains) List(q schema.QueryList) (r schema.DNSRecordList, err error) {
 	if v, ok := d.PerDomainRecords[q.ZoneName]; ok {
 		return v, err
 	}

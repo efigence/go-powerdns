@@ -2,7 +2,7 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/efigence/go-powerdns/schema"
 )
 
 type rawQuery struct {
@@ -10,63 +10,56 @@ type rawQuery struct {
 	p map[string]json.RawMessage
 }
 
-type QueryLookupCB interface {
-	Lookup(request QueryLookup) (QueryResponse, error)
+func recordToResponse(list schema.DNSRecordList, err error) (schema.QueryResponse, error) {
+	if err != nil {
+		return schema.QueryResponse{Result: schema.ResponseFailed()}, err
+	}
+
+	return schema.QueryResponse{Result: list}, nil
 }
 
-type QueryListCB interface {
-	List(request QueryList) (QueryResponse, error)
-}
-
-type CallbackList struct {
-	Lookup QueryLookupCB
-	List   QueryListCB
-}
-
-func (api Api) Parse(raw string) (QueryResponse, error) {
+func (api Api) Parse(raw string) (schema.QueryResponse, error) {
 	var err error
 	// parse "first level" of json to get type of query
 	var objmap map[string]json.RawMessage
 	err = json.Unmarshal([]byte(raw), &objmap)
 	if err != nil {
-		var n QueryResponse
+		var n schema.QueryResponse
 		return n, err
 	}
 	switch string(objmap[`method`]) {
 	case `"lookup"`:
-		var query QueryLookup
+		var query schema.QueryLookup
 		err := json.Unmarshal(objmap[`parameters`], &query)
 		if err != nil {
-			var n QueryResponse
+			var n schema.QueryResponse
 			return n, err
 		}
-		return api.callbacks.Lookup.Lookup(query)
+		resp, err := api.dns.Lookup(query)
+		return schema.QueryResponse{Result: resp}, err
 	case `"list"`:
-		var query QueryList
+		var query schema.QueryList
 		err := json.Unmarshal(objmap[`parameters`], &query)
 		if err != nil {
-			var n QueryResponse
+			var n schema.QueryResponse
 			return n, err
 		}
-		return api.callbacks.List.List(query)
+		resp, err := api.dns.List(query)
+		return recordToResponse(resp, err)
 	case `"initialize"`:
-		return ResponseOk(), err
+		return schema.ResponseOk(), err
 	default:
-		return ResponseFailed(), err
+		return schema.ResponseFailed(), err
 	}
 }
 
 type Api struct {
-	callbacks CallbackList
+	dns schema.DomainReader
 }
 
-func New(c CallbackList) (Api, error) {
+func New(c schema.DomainReader) (Api, error) {
 	var api Api
-	api.callbacks = c
+	api.dns = c
 	var err error
 	return api, err
-}
-
-func (data QueryLookup) Dump() string {
-	return fmt.Sprintf("%+v", data)
 }

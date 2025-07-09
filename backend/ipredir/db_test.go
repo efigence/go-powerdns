@@ -2,12 +2,11 @@ package ipredir
 
 import (
 	"github.com/efigence/go-powerdns/backend/memdb"
-	"github.com/efigence/go-powerdns/backend/schema"
+	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
-	//	"reflect"
-	"github.com/efigence/go-powerdns/api"
+
 	"sort"
 )
 
@@ -57,7 +56,7 @@ func TestRecordInsert(t *testing.T) {
 	assert.NoError(t, backend.AddRecord(testRecords["wildcard"]))
 	assert.NoError(t, backend.AddRecord(testRecords["www"]))
 	assert.NoError(t, backend.AddRecord(testRecords["zone"]))
-	q := api.QueryLookup{
+	q := schema.QueryLookup{
 		QType: "A",
 		QName: "www.example.com",
 	}
@@ -77,7 +76,7 @@ func TestRecordLookup(t *testing.T) {
 	assert.NoError(t, backend.AddRecord(testRecords["www3"]))
 	assert.NoError(t, backend.AddRecord(testRecords["zone"]))
 
-	q := api.QueryLookup{
+	q := schema.QueryLookup{
 		QType: "A",
 		QName: "www.example.com",
 	}
@@ -99,7 +98,7 @@ func BenchmarkRecordLookup(b *testing.B) {
 	backend.AddRecord(testRecords["www2"])
 	backend.AddRecord(testRecords["www3"])
 	backend.AddRecord(testRecords["zone"])
-	q := api.QueryLookup{
+	q := schema.QueryLookup{
 		QType: "A",
 		QName: "www.example.com",
 	}
@@ -115,7 +114,7 @@ func TestRedir(t *testing.T) {
 	backend.AddRedirIp("127.0.0.1", "127.0.0.2")
 
 	t.Run("Adding IP", func(t *testing.T) {
-		q := api.QueryLookup{
+		q := schema.QueryLookup{
 			QType:  "A",
 			QName:  "www.example.com",
 			Remote: "127.0.0.1",
@@ -141,7 +140,7 @@ func TestRedir(t *testing.T) {
 		backend.AddRedirIp("127.1.2.1", "127.0.0.2")
 		backend.AddRedirIp("127.1.3.1", "127.0.0.2")
 		backend.DeleteRedirIp("127.1.2.1")
-		q := api.QueryLookup{
+		q := schema.QueryLookup{
 			QType:  "A",
 			QName:  "www.example.com",
 			Remote: "127.1.2.1",

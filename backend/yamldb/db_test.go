@@ -1,8 +1,7 @@
 package yamldb
 
 import (
-	"github.com/efigence/go-powerdns/api"
-	"github.com/efigence/go-powerdns/backend/schema"
+	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -41,7 +40,7 @@ func TestRecordList(t *testing.T) {
 	backend, _ := New()
 	require.NoError(t, backend.LoadFile("t-data/dns.yaml"))
 
-	q := api.QueryLookup{
+	q := schema.QueryLookup{
 		QType: "A",
 		QName: "www.example.com",
 	}
@@ -51,7 +50,7 @@ func TestRecordList(t *testing.T) {
 	assert.NotContains(t, res, testRecords["wildcard"])
 	assert.Contains(t, res, testRecords["www1"])
 	assert.Contains(t, res, testRecords["www2"])
-	list, err := backend.List(api.QueryList{
+	list, err := backend.List(schema.QueryList{
 		ZoneName: "example.com",
 	})
 	assert.Len(t, list, 4)

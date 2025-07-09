@@ -1,16 +1,11 @@
 package yamldb
 
 import (
-	"github.com/efigence/go-powerdns/api"
 	"github.com/efigence/go-powerdns/backend/memdb"
-	"github.com/efigence/go-powerdns/backend/schema"
 	"github.com/efigence/go-powerdns/backend/yamlloader"
+	"github.com/efigence/go-powerdns/schema"
 	"time"
 )
-
-func asdf() {
-	_, _ = api.New(api.CallbackList{})
-}
 
 type YAMLDB struct {
 	db *memdb.MemDomains
@@ -61,10 +56,10 @@ func (db *YAMLDB) LoadFile(file string) error {
 	return nil
 }
 
-func (db *YAMLDB) Lookup(q api.QueryLookup) (schema.DNSRecordList, error) {
+func (db *YAMLDB) Lookup(q schema.QueryLookup) (schema.DNSRecordList, error) {
 	return db.db.Lookup(q)
 }
-func (db *YAMLDB) List(q api.QueryList) (schema.DNSRecordList, error) {
+func (db *YAMLDB) List(q schema.QueryList) (schema.DNSRecordList, error) {
 	return db.db.List(q)
 }
 

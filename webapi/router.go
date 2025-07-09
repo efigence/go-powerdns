@@ -6,7 +6,6 @@ import (
 	"github.com/efigence/go-powerdns/api"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	"github.com/zenazn/goji"
 	"go.uber.org/zap"
 	"html/template"
 	"io/fs"
@@ -45,15 +44,15 @@ func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
 	if cfg.AccessLogger == nil {
 		w.al = w.l //.Named("accesslog")
 	}
-	backend.dnsBackend, err = newDNSBackend()
+	w.dnsBackend, err = newDNSBackend()
 	if err != nil {
 		return nil, err
 	}
 	cbList := api.CallbackList{
-		Lookup: backend.dnsBackend,
-		List:   backend.dnsBackend,
+		Lookup: w.dnsBackend,
+		List:   w.dnsBackend,
 	}
-	backend.dnsApi, err = api.New(cbList)
+	w.dnsApi, err = api.New(cbList)
 	r := gin.New()
 	w.r = r
 	gin.SetMode(gin.ReleaseMode)
@@ -94,13 +93,12 @@ func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
 			"title": c.Request.RemoteAddr,
 		})
 	})
-	r.POST("/redir/:from/:to", backend.AddRedir)
 	r.GET("/dns", backend.Dns)
 	r.POST("/dns", backend.Dns)
 
 	r.POST("/redir/batch", backend.BatchAddRedir)
 	r.POST("/redir/:from/:to", backend.AddRedir)
-	goji.Delete("/redir/:from", backend.DeleteRedir)
+	r.DELETE("/redir/:from", backend.DeleteRedir)
 	r.GET("/redir/list", backend.ListRedir)
 	r.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "404.tmpl", gin.H{

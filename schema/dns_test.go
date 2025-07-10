@@ -36,10 +36,57 @@ func TestSoaFromDomain(t *testing.T) {
 	}
 	soaRecord := GenerateSoaFromDomain(d)
 	assert.Equal(t, res, soaRecord)
+	s1 := d.Serial
+	d.UpdateSerial()
+	s2 := d.Serial
+	assert.Greater(t, s2, s1)
 }
 
 func BenchmarkExpandDNSName(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _ = ExpandDNSName(`some.simple.dns.name`)
 	}
+}
+
+func TestDNSDomain_Validate(t *testing.T) {
+	d := DNSDomain{
+		Name:     "example.com",
+		NS:       []string{"ns1.example.com"},
+		Owner:    "hostmaster.example.com",
+		Serial:   12,
+		Refresh:  23,
+		Retry:    34,
+		Expiry:   45,
+		Nxdomain: 56,
+	}
+	assert.NoError(t, d.Validate())
+	v := d
+	v.Name = "example.com."
+	assert.Error(t, v.Validate())
+	v.Name = ""
+	assert.Error(t, v.Validate())
+	v.Name = "example.com"
+	assert.NoError(t, v.Validate())
+	v = d
+	v.NS = []string{}
+	assert.Error(t, v.Validate())
+	v = d
+	v.Owner = ""
+	assert.Error(t, v.Validate())
+	v = d
+	v.Serial = 0
+	assert.Error(t, v.Validate())
+	v = d
+	v.Refresh = 0
+	assert.Error(t, v.Validate())
+	v = d
+	v.Retry = 0
+	assert.Error(t, v.Validate())
+	v = d
+	v.Expiry = 0
+	assert.Error(t, v.Validate())
+	v = d
+	v.Nxdomain = 0
+	assert.Error(t, v.Validate())
+
 }

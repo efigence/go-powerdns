@@ -70,7 +70,7 @@ func main() {
 	m := memdb.New()
 	r, _ := ipredir.New(m)
 	w, err := webapi.New(webapi.Config{
-		Logger:       log.Named("api"),
+		Logger:       log.Named("web"),
 		AccessLogger: log.Named("access"),
 		ListenAddr:   cfg.ListenAddr,
 		DNSBackend:   m,

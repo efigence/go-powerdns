@@ -17,6 +17,31 @@ type DNSDomain struct {
 	Nxdomain int32
 }
 
+func (d DNSDomain) Validate() error {
+	if strings.HasSuffix(d.Name, ".") {
+		return fmt.Errorf("can't end with dot")
+	}
+	if d.Name == "" {
+		return fmt.Errorf("name can't be empty")
+	}
+	if d.Owner == "" {
+		return fmt.Errorf("need owner")
+	}
+	if len(d.NS) < 1 {
+		return fmt.Errorf("need nameserver")
+	}
+	if d.Serial < 1 ||
+		d.Refresh < 1 ||
+		d.Retry < 1 ||
+		d.Expiry < 1 ||
+		d.Nxdomain < 1 {
+		return fmt.Errorf("none of those can be zero [%+v]", d)
+	}
+	return nil
+}
+
+type DNSDomainList []DNSDomain
+
 // Single DNS record structure
 type DNSRecord struct {
 	QType      string `json:"qtype"`
@@ -30,7 +55,6 @@ type DNSRecord struct {
 
 // sortable list of records, used usually as response
 // empty list should be treated as "no records exist" and return accordingly
-type DNSRecordList []DNSRecord
 
 func (d *DNSDomain) UpdateSerial() {
 	d.Serial += 1 // Yes, overflow is completely fine here,
@@ -49,21 +73,6 @@ func GenerateSoaFromDomain(d DNSDomain) DNSRecord {
 	rec.Content = strings.Join(content, "")
 	rec.Ttl = d.Nxdomain
 	return rec
-}
-
-// sort helper
-func (slice DNSRecordList) Len() int {
-	return len(slice)
-}
-
-// sort helper
-func (slice DNSRecordList) Less(a, b int) bool {
-	return (slice[a].QName + slice[a].Content + slice[a].QType) < (slice[b].QName + slice[b].Content + slice[b].QType)
-}
-
-// sort helper
-func (slice DNSRecordList) Swap(a, b int) {
-	slice[a], slice[b] = slice[b], slice[a]
 }
 
 // generate array of domains from subdomain, specific -> generic
@@ -85,10 +94,11 @@ func (n *NXDomain) Error() string {
 }
 
 type DomainReader interface {
-	Lookup(q QueryLookup) (DNSRecordList, error)
-	List(q QueryList) (DNSRecordList, error)
+	Lookup(q QueryLookup) ([]DNSRecord, error)
+	List(q QueryList) ([]DNSRecord, error)
 	// Find root domain for a given subdomain. Return NXDomain if it does not exist, anything else is db error
 	GetRootDomainFor(string) (string, error)
+	ListDomains(disabled bool) ([]DNSDomain, error)
 }
 type DomainWriter interface {
 	// Add domain; that should also generate SOA record and AddRecord() it if backend doesn't handle that

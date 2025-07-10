@@ -9,16 +9,16 @@ import (
 
 func New() *MemDomains {
 	var v MemDomains
-	v.DomainRecords = make(map[string]map[string]schema.DNSRecordList)
+	v.DomainRecords = make(map[string]map[string][]schema.DNSRecord)
 	v.Domains = make(map[string]schema.DNSDomain)
-	v.PerDomainRecords = map[string]schema.DNSRecordList{}
+	v.PerDomainRecords = map[string][]schema.DNSRecord{}
 	return &v
 }
 
 type MemDomains struct {
-	DomainRecords    map[string]map[string]schema.DNSRecordList
+	DomainRecords    map[string]map[string][]schema.DNSRecord
 	Domains          map[string]schema.DNSDomain
-	PerDomainRecords map[string]schema.DNSRecordList
+	PerDomainRecords map[string][]schema.DNSRecord
 }
 
 func (d *MemDomains) GetRootDomainFor(dom string) (root string, err error) {
@@ -75,21 +75,21 @@ func (d *MemDomains) AddRecord(record schema.DNSRecord) error {
 		return err
 	}
 	if d.DomainRecords[record.QName] == nil {
-		d.DomainRecords[record.QName] = make(map[string]schema.DNSRecordList)
+		d.DomainRecords[record.QName] = make(map[string][]schema.DNSRecord)
 	}
 	d.DomainRecords[record.QName][record.QType] = append(d.DomainRecords[record.QName][record.QType], record)
 	if _, ok := d.PerDomainRecords[domName]; !ok {
-		d.PerDomainRecords[domName] = schema.DNSRecordList{}
+		d.PerDomainRecords[domName] = []schema.DNSRecord{}
 	}
 	d.PerDomainRecords[domName] = append(d.PerDomainRecords[domName], record)
 	return err
 }
 
 // return records for query
-func (d *MemDomains) Lookup(query schema.QueryLookup) (schema.DNSRecordList, error) {
+func (d *MemDomains) Lookup(query schema.QueryLookup) ([]schema.DNSRecord, error) {
 	var err error
 	if query.QType == `ANY` {
-		var recordsAny schema.DNSRecordList
+		var recordsAny []schema.DNSRecord
 		for _, records := range d.DomainRecords[query.QName] {
 			recordsAny = append(recordsAny, records...)
 		}
@@ -100,9 +100,27 @@ func (d *MemDomains) Lookup(query schema.QueryLookup) (schema.DNSRecordList, err
 }
 
 // return all records for domain (For AXFR-type requests)
-func (d *MemDomains) List(q schema.QueryList) (r schema.DNSRecordList, err error) {
+func (d *MemDomains) List(q schema.QueryList) (r []schema.DNSRecord, err error) {
 	if v, ok := d.PerDomainRecords[q.ZoneName]; ok {
 		return v, err
 	}
 	return r, err
+}
+
+func (d *MemDomains) ListDomains(disabled bool) ([]schema.DNSDomain, error) {
+	domlist := []schema.DNSDomain{}
+	for _, dom := range d.Domains {
+		domlist = append(domlist, schema.DNSDomain{
+			Name:     dom.Name,
+			NS:       dom.NS,
+			Owner:    dom.Owner,
+			Serial:   dom.Serial,
+			Refresh:  dom.Refresh,
+			Retry:    dom.Retry,
+			Expiry:   dom.Expiry,
+			Nxdomain: dom.Nxdomain,
+		})
+	}
+	return domlist, nil
+
 }

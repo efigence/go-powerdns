@@ -41,14 +41,14 @@ func (d *ipredirDomains) GetRootDomainFor(s string) (string, error) {
 }
 
 // Returns nil if request should not be redirected and DNS records if it should
-func (d *ipredirDomains) Lookup(query schema.QueryLookup) (schema.DNSRecordList, error) {
+func (d *ipredirDomains) Lookup(query schema.QueryLookup) ([]schema.DNSRecord, error) {
 	var err error
 	if val, ok := d.redirMap[query.Remote]; ok {
 		if query.QType == "SOA" {
 			// pretend we know the domain's root
 			splitDomain, err := schema.ExpandDNSName(query.QName)
 			if err != nil {
-				return schema.DNSRecordList{}, err
+				return []schema.DNSRecord{}, err
 			}
 			var res schema.DNSRecord
 			res.QType = "SOA"
@@ -64,25 +64,27 @@ func (d *ipredirDomains) Lookup(query schema.QueryLookup) (schema.DNSRecordList,
 				}
 				res.Content = strings.Join(content, "")
 				res.Ttl = 10
-				return schema.DNSRecordList{res}, err
+				return []schema.DNSRecord{res}, err
 			} else { // someone thinks we're root domain.... nope
-				return schema.DNSRecordList{}, errors.New(fmt.Sprintf("too short domain %+v, we're not handling root", splitDomain))
+				return []schema.DNSRecord{}, errors.New(fmt.Sprintf("too short domain %+v, we're not handling root", splitDomain))
 			}
 		} else {
 			var res schema.DNSRecord
 			res.QName = query.QName
 			res.QType = "A"
 			res.Content = val
-			return schema.DNSRecordList{res}, err
+			return []schema.DNSRecord{res}, err
 		}
 	}
-	return schema.DNSRecordList{}, nil
+	return []schema.DNSRecord{}, nil
 }
 
 // return all records for domain (For AXFR-type requests)
 // Returns nil if request should not be redirected and DNS records if it should
-func (d *ipredirDomains) List(schema.QueryList) (schema.DNSRecordList, error) {
+func (d *ipredirDomains) List(schema.QueryList) ([]schema.DNSRecord, error) {
 	var err error
-	return schema.DNSRecordList{}, err
-	return nil, err
+	return []schema.DNSRecord{}, err
+}
+func (db *ipredirDomains) ListDomains(disabled bool) ([]schema.DNSDomain, error) {
+	return db.backend.ListDomains(disabled)
 }

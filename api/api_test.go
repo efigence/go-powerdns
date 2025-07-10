@@ -5,6 +5,7 @@ import (
 	"github.com/efigence/go-powerdns/backend/memdb"
 	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap/zaptest"
 	"testing"
 	//	"reflect"
 	"fmt"
@@ -59,13 +60,13 @@ var qList = testQList{}
 func TestQuery(t *testing.T) {
 	fmt.Printf("")
 	t.Run("Init", func(t *testing.T) {
-		api, _ := New(testQBackend())
+		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
 		out, err := api.Parse(queries["initialize"])
 		assert.NoError(t, err)
 		assert.Equal(t, out, schema.ResponseOk())
 	})
 	t.Run("Lookup", func(t *testing.T) {
-		api, _ := New(testQBackend())
+		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
 		out, err := api.Parse(queries["lookup"])
 		testQueryOutput, _ := qLookup.Lookup(schema.QueryLookup{})
 		assert.NoError(t, err)
@@ -74,7 +75,7 @@ func TestQuery(t *testing.T) {
 		assert.Equal(t, string(testj), string(outj))
 	})
 	t.Run("List", func(t *testing.T) {
-		api, _ := New(testQBackend())
+		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
 		out, err := api.Parse(queries["list"])
 		testQueryOutput, _ := qList.List(schema.QueryList{})
 		assert.NoError(t, err)
@@ -84,9 +85,9 @@ func TestQuery(t *testing.T) {
 
 	})
 	t.Run("BadReq", func(t *testing.T) {
-		api, _ := New(testQBackend())
+		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
 		out, err := api.Parse(queries["badreq"])
-		assert.NoError(t, err)
+		assert.Error(t, err)
 		assert.Equal(t, schema.ResponseFailed(), out)
 	})
 }

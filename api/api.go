@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"github.com/efigence/go-powerdns/schema"
+	"go.uber.org/zap"
 )
 
 type rawQuery struct {
@@ -10,7 +11,7 @@ type rawQuery struct {
 	p map[string]json.RawMessage
 }
 
-func recordToResponse(list schema.DNSRecordList, err error) (schema.QueryResponse, error) {
+func recordToResponse(list []schema.DNSRecord, err error) (schema.QueryResponse, error) {
 	if err != nil {
 		return schema.QueryResponse{Result: schema.ResponseFailed()}, err
 	}
@@ -48,18 +49,29 @@ func (api Api) Parse(raw string) (schema.QueryResponse, error) {
 		return recordToResponse(resp, err)
 	case `"initialize"`:
 		return schema.ResponseOk(), err
+	case `"getAllDomains"`:
+		return schema.ResponseFailed(), err
 	default:
+		var v interface{}
+		err := json.Unmarshal(objmap[`parameters`], v)
+		if err != nil {
+			api.l.Error("could not parse [%s]", raw)
+		} else {
+			api.l.Errorf("unsupported cmd %+v", v)
+		}
 		return schema.ResponseFailed(), err
 	}
 }
 
 type Api struct {
 	dns schema.DomainReader
+	l   *zap.SugaredLogger
 }
 
-func New(c schema.DomainReader) (Api, error) {
-	var api Api
-	api.dns = c
-	var err error
-	return api, err
+func New(c schema.DomainReader, log *zap.SugaredLogger) (*Api, error) {
+	api := Api{
+		dns: c,
+		l:   log,
+	}
+	return &api, nil
 }

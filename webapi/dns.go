@@ -1,9 +1,8 @@
 package webapi
 
 import (
-	"github.com/gin-gonic/gin"
-
 	"bytes"
+	"github.com/gin-gonic/gin"
 	"github.com/op/go-logging"
 	//	"github.com/unrolled/render" // or "gopkg.in/unrolled/render.v1")
 	"net/http"
@@ -16,7 +15,6 @@ func (w *WebBackend) Dns(c *gin.Context) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(c.Request.Body)
 	s := buf.String()
-	log.Warning(s)
 	resp, err := w.dnsApi.Parse(s)
 	if err != nil {
 		log.Error("failure on responding query: %+v", err)

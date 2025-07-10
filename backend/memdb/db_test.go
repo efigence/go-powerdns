@@ -4,9 +4,8 @@ import (
 	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"slices"
 	"testing"
-
-	"sort"
 )
 
 var testStrings []string
@@ -43,6 +42,17 @@ var testRecords = map[string]schema.DNSRecord{
 		Ttl:     60,
 	},
 }
+var cmpFunc = func(a, b schema.DNSRecord) int {
+	x := a.QName + a.Content + a.QType
+	y := a.QName + a.Content + a.QType
+	if x < y {
+		return -1
+	}
+	if x > y {
+		return 1
+	}
+	return 0
+}
 
 func TestMemDomains_AddDomain(t *testing.T) {
 	backend := New()
@@ -72,7 +82,7 @@ func TestRecordInsert(t *testing.T) {
 	}
 	res, err := backend.Lookup(q)
 	require.NoError(t, err)
-	assert.Equal(t, schema.DNSRecordList{testRecords["www"]}, res)
+	assert.Equal(t, []schema.DNSRecord{testRecords["www"]}, res)
 	list, err := backend.List(schema.QueryList{
 		ZoneName: "example.com",
 	})
@@ -97,10 +107,10 @@ func TestRecordLookup(t *testing.T) {
 	res, err := backend.Lookup(q)
 	require.NoError(t, err)
 	// ShouldContain craps itself on structs, work around it
-	correctOutput := schema.DNSRecordList{testRecords["www"], testRecords["www2"], testRecords["www3"]}
+	correctOutput := []schema.DNSRecord{testRecords["www"], testRecords["www2"], testRecords["www3"]}
 
-	sort.Sort(res)
-	sort.Sort(correctOutput)
+	slices.SortFunc(res, cmpFunc)
+	slices.SortFunc(correctOutput, cmpFunc)
 	assert.Equal(t, correctOutput, res)
 }
 
@@ -122,11 +132,10 @@ func TestRecordLookupAny(t *testing.T) {
 	}
 	res, err := backend.Lookup(q)
 	require.NoError(t, err)
-	correctOutput := schema.DNSRecordList{testRecords["www"], testRecords["www2"], testRecords["www3"]}
+	correctOutput := []schema.DNSRecord{testRecords["www"], testRecords["www2"], testRecords["www3"]}
 
-	sort.Sort(res)
-	sort.Sort(correctOutput)
-
+	slices.SortFunc(res, cmpFunc)
+	slices.SortFunc(correctOutput, cmpFunc)
 	assert.Equal(t, correctOutput, res)
 
 }

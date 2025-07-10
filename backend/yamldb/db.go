@@ -56,11 +56,14 @@ func (db *YAMLDB) LoadFile(file string) error {
 	return nil
 }
 
-func (db *YAMLDB) Lookup(q schema.QueryLookup) (schema.DNSRecordList, error) {
+func (db *YAMLDB) Lookup(q schema.QueryLookup) ([]schema.DNSRecord, error) {
 	return db.db.Lookup(q)
 }
-func (db *YAMLDB) List(q schema.QueryList) (schema.DNSRecordList, error) {
+func (db *YAMLDB) List(q schema.QueryList) ([]schema.DNSRecord, error) {
 	return db.db.List(q)
+}
+func (db *YAMLDB) ListDomains(disabled bool) ([]schema.DNSDomain, error) {
+	return db.db.ListDomains(disabled)
 }
 
 func (db *YAMLDB) GetRootDomainFor(s string) (string, error) {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/efigence/go-mon"
 	"github.com/efigence/go-powerdns/api"
-	"github.com/efigence/go-powerdns/backend/memdb"
 	"github.com/efigence/go-powerdns/schema"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
@@ -23,7 +22,7 @@ type WebBackend struct {
 	cfg      *Config
 	dns      schema.DomainReader
 	redirApi schema.IPRedir
-	dnsApi   api.Api
+	dnsApi   *api.Api
 }
 
 type Config struct {
@@ -41,17 +40,22 @@ func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
 	if len(cfg.ListenAddr) == 0 {
 		panic("missing listen addr")
 	}
+	dnsApi, err := api.New(cfg.DNSBackend, cfg.Logger.Named("api"))
+	if err != nil {
+		return nil, err
+	}
 	w := WebBackend{
 		l:        cfg.Logger,
 		al:       cfg.AccessLogger,
 		dns:      cfg.DNSBackend,
 		redirApi: cfg.RedirBackend,
+		dnsApi:   dnsApi,
 		cfg:      &cfg,
 	}
 	if cfg.AccessLogger == nil {
 		w.al = w.l //.Named("accesslog")
 	}
-	w.dnsApi, err = api.New(memdb.New())
+
 	r := gin.New()
 	w.r = r
 	gin.SetMode(gin.ReleaseMode)
@@ -92,19 +96,18 @@ func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
 			"title": c.Request.RemoteAddr,
 		})
 	})
-	r.GET("/dns", backend.Dns)
-	r.POST("/dns", backend.Dns)
+	r.GET("/dns", w.Dns)
+	r.POST("/dns", w.Dns)
 
-	r.POST("/redir/batch", backend.BatchAddRedir)
-	r.POST("/redir/:from/:to", backend.AddRedir)
-	r.DELETE("/redir/:from", backend.DeleteRedir)
-	r.GET("/redir/list", backend.ListRedir)
+	r.POST("/redir/batch", w.BatchAddRedir)
+	r.POST("/redir/:from/:to", w.AddRedir)
+	r.DELETE("/redir/:from", w.DeleteRedir)
+	r.GET("/redir/list", w.ListRedir)
 	r.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "404.tmpl", gin.H{
 			"notfound": c.Request.URL.Path,
 		})
 	})
-
 	return &w, nil
 }
 

@@ -2,8 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/efigence/go-powerdns/schema"
 	"go.uber.org/zap"
+	"strings"
 )
 
 type rawQuery struct {
@@ -18,7 +20,13 @@ func recordToResponse(list []schema.DNSRecord, err error) (schema.QueryResponse,
 
 	return schema.QueryResponse{Result: list}, nil
 }
+func domainToResponse(list []schema.PDNSDomain, err error) (schema.QueryResponse, error) {
+	if err != nil {
+		return schema.QueryResponse{Result: schema.ResponseFailed()}, err
+	}
 
+	return schema.QueryResponse{Result: list}, nil
+}
 func (api Api) Parse(raw string) (schema.QueryResponse, error) {
 	var err error
 	// parse "first level" of json to get type of query
@@ -36,6 +44,7 @@ func (api Api) Parse(raw string) (schema.QueryResponse, error) {
 			var n schema.QueryResponse
 			return n, err
 		}
+		query.QName = strings.TrimRight(query.QName, ".")
 		resp, err := api.dns.Lookup(query)
 		return schema.QueryResponse{Result: resp}, err
 	case `"list"`:
@@ -45,21 +54,18 @@ func (api Api) Parse(raw string) (schema.QueryResponse, error) {
 			var n schema.QueryResponse
 			return n, err
 		}
+		strings.TrimRight(query.ZoneName, ".")
 		resp, err := api.dns.List(query)
 		return recordToResponse(resp, err)
 	case `"initialize"`:
 		return schema.ResponseOk(), err
 	case `"getAllDomains"`:
-		return schema.ResponseFailed(), err
+		domains, err := api.dns.ListDomains(false)
+		pdnsDomains := schema.NewPDNSDomainList(domains)
+		return domainToResponse(pdnsDomains, err)
 	default:
-		var v interface{}
-		err := json.Unmarshal(objmap[`parameters`], v)
-		if err != nil {
-			api.l.Error("could not parse [%s]", raw)
-		} else {
-			api.l.Errorf("unsupported cmd %+v", v)
-		}
-		return schema.ResponseFailed(), err
+		api.l.Warnf("unimplemented %s %s", objmap[`method`], string(objmap[`parameters`]))
+		return schema.ResponseFailed(), fmt.Errorf("unimplemented request")
 	}
 }
 

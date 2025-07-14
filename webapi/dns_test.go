@@ -6,6 +6,7 @@ import (
 	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 	"net/http"
 	"net/http/httptest"
@@ -75,4 +76,39 @@ func TestDNS(t *testing.T) {
 	router.r.ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Code)
 	assert.Contains(t, w.Body.String(), `1.2.3.4`)
+}
+
+func BenchmarkWebBackend_Dns(t *testing.B) {
+	backend := memdb.New()
+	router, err := New(Config{
+		Logger:       zaptest.NewLogger(t, zaptest.Level(zap.WarnLevel)).Sugar(),
+		AccessLogger: zaptest.NewLogger(t, zaptest.Level(zap.WarnLevel)).Sugar(),
+		ListenAddr:   "0.0.0.0:12345",
+		DNSBackend:   backend,
+	}, testFS)
+	require.NoError(t, err)
+	backend.AddDomain(schema.DNSDomain{
+		Name: "example.com",
+		NS:   []string{"ns1.example.com"},
+	})
+	backend.AddRecord(schema.DNSRecord{
+		QType:   "A",
+		QName:   "example.com",
+		Content: "1.2.3.4",
+		Ttl:     61,
+	})
+	//
+	w := httptest.NewRecorder()
+
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		b := bytes.Buffer{}
+		b.WriteString(`{"method": "getAllDomains", "parameters": {"include_disabled": true}}`)
+		req, _ := http.NewRequest(
+			"POST",
+			"/dns",
+			&b,
+		)
+		router.r.ServeHTTP(w, req)
+	}
 }

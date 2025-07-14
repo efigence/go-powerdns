@@ -113,7 +113,7 @@ func TestRecordLookup(t *testing.T) {
 	slices.SortFunc(correctOutput, cmpFunc)
 	assert.Equal(t, correctOutput, res)
 	q = schema.QueryLookup{
-		QType: "ANY",
+		QType: "A",
 		QName: "potato.example.com",
 	}
 	res, err = backend.Lookup(q)
@@ -161,7 +161,59 @@ func TestRecordLookupAny(t *testing.T) {
 	slices.SortFunc(res, cmpFunc)
 	slices.SortFunc(correctOutput, cmpFunc)
 	assert.Equal(t, correctOutput, res)
+}
 
+func BenchmarkMemDomains_Lookup(b *testing.B) {
+	backend := New()
+	backend.AddDomain(schema.DNSDomain{
+		Name: "example.com",
+		NS:   []string{"ns1.example.com"},
+	})
+	backend.AddRecord(testRecords["wildcard"])
+	backend.AddRecord(testRecords["www"])
+	backend.AddRecord(testRecords["www2"])
+	backend.AddRecord(testRecords["www3"])
+	backend.AddRecord(testRecords["zone"])
+	b.Run("A", func(b *testing.B) {
+		q := schema.QueryLookup{
+			QType: "A",
+			QName: "www.example.com",
+		}
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			backend.Lookup(q)
+		}
+	})
+	b.Run("A wildcard", func(b *testing.B) {
+		q := schema.QueryLookup{
+			QType: "A",
+			QName: "potato.example.com",
+		}
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			backend.Lookup(q)
+		}
+	})
+	b.Run("ANY", func(b *testing.B) {
+		q := schema.QueryLookup{
+			QType: "ANY",
+			QName: "www.example.com",
+		}
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			backend.Lookup(q)
+		}
+	})
+	b.Run("ANY wildcard", func(b *testing.B) {
+		q := schema.QueryLookup{
+			QType: "A",
+			QName: "potato.example.com",
+		}
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			backend.Lookup(q)
+		}
+	})
 }
 
 func TestMemDomains_GetRootDomainFor(t *testing.T) {

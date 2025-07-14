@@ -37,6 +37,8 @@ func (api Api) Parse(raw string) (schema.QueryResponse, error) {
 		return n, err
 	}
 	switch string(objmap[`method`]) {
+	case `"initialize"`:
+		return schema.ResponseOk(), err
 	case `"lookup"`:
 		var query schema.QueryLookup
 		err := json.Unmarshal(objmap[`parameters`], &query)
@@ -47,7 +49,8 @@ func (api Api) Parse(raw string) (schema.QueryResponse, error) {
 		query.QName = strings.TrimRight(query.QName, ".")
 		resp, err := api.dns.Lookup(query)
 		return schema.QueryResponse{Result: resp}, err
-	case `"list"`:
+	// no such thing as disabled records in our backends so list and APILookup are functionally same
+	case `"list"`, `"APILookup"`:
 		var query schema.QueryList
 		err := json.Unmarshal(objmap[`parameters`], &query)
 		if err != nil {
@@ -57,15 +60,15 @@ func (api Api) Parse(raw string) (schema.QueryResponse, error) {
 		strings.TrimRight(query.ZoneName, ".")
 		resp, err := api.dns.List(query)
 		return recordToResponse(resp, err)
-	case `"initialize"`:
-		return schema.ResponseOk(), err
+	case `getUpdatedMaster`:
+		return schema.ResponseFailed("method %s not implemented, use native zone", string(objmap["method"])), nil
 	case `"getAllDomains"`:
 		domains, err := api.dns.ListDomains(false)
 		pdnsDomains := schema.NewPDNSDomainList(domains)
 		return domainToResponse(pdnsDomains, err)
 	default:
 		api.l.Warnf("unimplemented %s %s", objmap[`method`], string(objmap[`parameters`]))
-		return schema.ResponseFailed(), fmt.Errorf("unimplemented request")
+		return schema.ResponseFailed("method %s not implemented", string(objmap["method"])), fmt.Errorf("unimplemented")
 	}
 }
 

@@ -4,8 +4,7 @@ import (
 	"embed"
 	"flag"
 	"github.com/efigence/go-powerdns/backend/ipredir"
-	"github.com/efigence/go-powerdns/backend/memdb"
-	"github.com/efigence/go-powerdns/schema"
+	"github.com/efigence/go-powerdns/backend/yamldb"
 	"github.com/efigence/go-powerdns/webapi"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -68,17 +67,8 @@ func main() {
 	flag.Set("bind", cfg.ListenAddr)
 	log.Info("Starting app")
 	log.Debug("version: %s", version)
-	m := memdb.New()
-	m.AddDomain(schema.DNSDomain{
-		Name: "example.com",
-		NS:   []string{"ns1.example.com"},
-	})
-	m.AddRecord(schema.DNSRecord{
-		QType:   "A",
-		QName:   "example.com",
-		Content: "1.2.3.4",
-		Ttl:     3600,
-	})
+	m, _ := yamldb.New()
+	log.Info("loading yaml %s", m.LoadFile("t-data/dns.yaml"))
 	r, _ := ipredir.New(m)
 	w, err := webapi.New(webapi.Config{
 		Logger:       log.Named("web"),

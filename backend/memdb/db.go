@@ -90,13 +90,36 @@ func (d *MemDomains) Lookup(query schema.QueryLookup) ([]schema.DNSRecord, error
 	var err error
 	if query.QType == `ANY` {
 		var recordsAny []schema.DNSRecord
-		for _, records := range d.DomainRecords[query.QName] {
-			recordsAny = append(recordsAny, records...)
+		if rec, ok := d.DomainRecords[query.QName]; ok {
+			for _, records := range rec {
+				recordsAny = append(recordsAny, records...)
+			}
+			return recordsAny, err
+		}
+		_, dom, _ := strings.Cut(query.QName, ".")
+		if rec, ok := d.DomainRecords["*."+dom]; ok {
+			for _, records := range rec {
+				for _, r := range records {
+					r.QName = query.QName
+					recordsAny = append(recordsAny, r)
+				}
+			}
+			return recordsAny, err
 		}
 		return recordsAny, err
 	} else {
-		return d.DomainRecords[query.QName][query.QType], err
+		if v, ok := d.DomainRecords[query.QName][query.QType]; ok {
+			return v, err
+		}
+		_, dom, _ := strings.Cut(query.QName, ".")
+		if v, ok := d.DomainRecords["*."+dom][query.QType]; ok {
+			for idx := range v {
+				v[idx].QName = query.QName
+			}
+			return v, err
+		}
 	}
+	return []schema.DNSRecord{}, nil
 }
 
 // return all records for domain (For AXFR-type requests)

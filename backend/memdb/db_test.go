@@ -112,6 +112,30 @@ func TestRecordLookup(t *testing.T) {
 	slices.SortFunc(res, cmpFunc)
 	slices.SortFunc(correctOutput, cmpFunc)
 	assert.Equal(t, correctOutput, res)
+	q = schema.QueryLookup{
+		QType: "ANY",
+		QName: "potato.example.com",
+	}
+	res, err = backend.Lookup(q)
+	require.NoError(t, err)
+	tr := testRecords["wildcard"]
+	tr.QName = "potato.example.com"
+	correctOutput = []schema.DNSRecord{tr}
+	slices.SortFunc(res, cmpFunc)
+	slices.SortFunc(correctOutput, cmpFunc)
+	assert.Equal(t, correctOutput, res)
+	q = schema.QueryLookup{
+		QType: "ANY",
+		QName: "tomato.example.com",
+	}
+	res, err = backend.Lookup(q)
+	require.NoError(t, err)
+	tr = testRecords["wildcard"]
+	tr.QName = "tomato.example.com"
+	correctOutput = []schema.DNSRecord{tr}
+	slices.SortFunc(res, cmpFunc)
+	slices.SortFunc(correctOutput, cmpFunc)
+	assert.Equal(t, correctOutput, res)
 }
 
 func TestRecordLookupAny(t *testing.T) {

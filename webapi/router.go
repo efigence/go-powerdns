@@ -29,7 +29,7 @@ type Config struct {
 	Logger       *zap.SugaredLogger `yaml:"-"`
 	AccessLogger *zap.SugaredLogger `yaml:"-"`
 	ListenAddr   string             `yaml:"listen_addr"`
-	DNSBackend   schema.DomainReadWriter
+	DNSBackend   schema.DomainReader
 	RedirBackend schema.IPRedir
 }
 

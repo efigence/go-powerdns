@@ -74,5 +74,5 @@ func TestDNS(t *testing.T) {
 	)
 	router.r.ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Code)
-	assert.Contains(t, w.Body.String(), `potato`)
+	assert.Contains(t, w.Body.String(), `1.2.3.4`)
 }

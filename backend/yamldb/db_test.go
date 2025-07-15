@@ -112,7 +112,7 @@ func TestYAMLDB_UpdateDir(t *testing.T) {
 	assert.Contains(t, res, testRecords["potato1"])
 	assert.NotContains(t, res, testRecords["www2"])
 	// replace DB
-	backend.UpdateDir("../../t-data/dns/example.yaml")
+	require.NoError(t, backend.UpdateDir("../../t-data/dns/example.yaml"))
 	q = schema.QueryLookup{
 		QType: "A",
 		QName: "www.potato.com",

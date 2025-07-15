@@ -1,0 +1,19 @@
+---
+zones:
+    example.com:
+        ns: [ ns1.potato.com ]
+        owner: hostmaster.potato.com
+        expiry: 86400s
+        records:
+            "*":
+                A: ['5.2.3.4']
+                MX:
+                    - value: mx1.potato.com
+                    - value: mx2.potato.com
+                      prio: 100
+                      ttl: 100s
+            "www":
+                ttl: 60s
+                A:
+                    - '5.4.5.6'
+                    - '6.4.5.7'

@@ -1,9 +1,13 @@
 package yamldb
 
 import (
+	"fmt"
 	"github.com/efigence/go-powerdns/backend/memdb"
 	"github.com/efigence/go-powerdns/backend/yamlloader"
 	"github.com/efigence/go-powerdns/schema"
+	"io/fs"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -54,6 +58,31 @@ func (db *YAMLDB) LoadFile(file string) error {
 		}
 	}
 	return nil
+}
+
+func (db *YAMLDB) LoadDir(dir string) error {
+	filecount := 0
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if !strings.HasSuffix(path, ".yaml") {
+			return nil
+		}
+		filecount++
+		return db.LoadFile(path)
+	})
+	if err != nil {
+		return err
+	}
+	if filecount > 0 {
+		return nil
+	} else {
+		return fmt.Errorf("zero *.yaml files parsed in dir %s", dir)
+	}
 }
 
 func (db *YAMLDB) Lookup(q schema.QueryLookup) ([]schema.DNSRecord, error) {

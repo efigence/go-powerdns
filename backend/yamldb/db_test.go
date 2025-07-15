@@ -34,11 +34,17 @@ var testRecords = map[string]schema.DNSRecord{
 		Content: "1.2.3.6",
 		Ttl:     60,
 	},
+	"potato1": {
+		QType:   "A",
+		QName:   "www.potato.com",
+		Content: "5.4.5.6",
+		Ttl:     61,
+	},
 }
 
 func TestRecordList(t *testing.T) {
 	backend, _ := New()
-	require.NoError(t, backend.LoadFile("t-data/dns.yaml"))
+	require.NoError(t, backend.LoadFile("../../t-data/dns.yaml"))
 
 	q := schema.QueryLookup{
 		QType: "A",
@@ -54,4 +60,43 @@ func TestRecordList(t *testing.T) {
 		ZoneName: "example.com",
 	})
 	assert.Len(t, list, 4)
+}
+
+func TestYAMLDB_LoadDir(t *testing.T) {
+	t.Run("No dup domains", func(t *testing.T) {
+		backend, _ := New()
+		require.Error(t, backend.LoadDir("../../t-data/dupdomain"))
+
+	})
+	t.Run("No yaml dir fail", func(t *testing.T) {
+		backend, _ := New()
+		require.Error(t, backend.LoadDir("."))
+
+	})
+	t.Run("load subdirectory", func(t *testing.T) {
+
+		backend, _ := New()
+
+		require.NoError(t, backend.LoadDir("../../t-data/dns"))
+		q := schema.QueryLookup{
+			QType: "A",
+			QName: "www.example.com",
+		}
+		res, err := backend.Lookup(q)
+		assert.NoError(t, err, "should lookup records")
+		assert.Len(t, res, 2)
+		assert.NotContains(t, res, testRecords["wildcard"])
+		assert.Contains(t, res, testRecords["www1"])
+		assert.Contains(t, res, testRecords["www2"])
+		q = schema.QueryLookup{
+			QType: "A",
+			QName: "www.potato.com",
+		}
+		res, err = backend.Lookup(q)
+		assert.NoError(t, err, "should lookup records")
+		assert.Len(t, res, 2)
+		assert.NotContains(t, res, testRecords["wildcard"])
+		assert.Contains(t, res, testRecords["potato1"])
+		assert.NotContains(t, res, testRecords["www2"])
+	})
 }

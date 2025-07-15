@@ -43,6 +43,10 @@ func (d *MemDomains) GetRootDomainFor(dom string) (root string, err error) {
 // add domain to DB
 func (d *MemDomains) AddDomain(domain schema.DNSDomain) error {
 	var err error
+	if _, ok := d.Domains[domain.Name]; ok {
+		return fmt.Errorf("tried to add duplicate %s", domain.Name)
+	}
+
 	// some defaults
 	if domain.Owner == "" {
 		domain.Owner = "hostmaster." + domain.Name

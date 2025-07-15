@@ -65,6 +65,10 @@ func TestMemDomains_AddDomain(t *testing.T) {
 	assert.Greater(t, backend.Domains["www.example2.com"].Retry, int32(0))
 	assert.Greater(t, backend.Domains["www.example2.com"].Expiry, int32(0))
 	assert.Greater(t, backend.Domains["www.example2.com"].Nxdomain, int32(0))
+	require.Error(t, backend.AddDomain(schema.DNSDomain{
+		Name: "www.example2.com",
+		NS:   []string{"ns1.example.com"},
+	}))
 }
 
 func TestRecordInsert(t *testing.T) {

@@ -85,6 +85,19 @@ func (db *YAMLDB) LoadDir(dir string) error {
 	}
 }
 
+func (db *YAMLDB) UpdateDir(dir string) error {
+	n, _ := New()
+	err := n.LoadDir(dir)
+	if err != nil {
+		return err
+	}
+	// this is technically wrong, atomic.Pointer should be used but it's such
+	// PITA to use that we will just hope golang devs wont fuck up implicit atomic pointer writes
+	db.db = n.db
+	return err
+
+}
+
 func (db *YAMLDB) Lookup(q schema.QueryLookup) ([]schema.DNSRecord, error) {
 	return db.db.Lookup(q)
 }

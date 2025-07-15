@@ -100,3 +100,33 @@ func TestYAMLDB_LoadDir(t *testing.T) {
 		assert.NotContains(t, res, testRecords["www2"])
 	})
 }
+func TestYAMLDB_UpdateDir(t *testing.T) {
+	backend, _ := New()
+	require.NoError(t, backend.LoadDir("../../t-data/dns/subdir/potato.yaml"))
+	q := schema.QueryLookup{
+		QType: "A",
+		QName: "www.potato.com",
+	}
+	res, err := backend.Lookup(q)
+	assert.NoError(t, err)
+	assert.Contains(t, res, testRecords["potato1"])
+	assert.NotContains(t, res, testRecords["www2"])
+	// replace DB
+	backend.UpdateDir("../../t-data/dns/example.yaml")
+	q = schema.QueryLookup{
+		QType: "A",
+		QName: "www.potato.com",
+	}
+	res, err = backend.Lookup(q)
+	assert.NoError(t, err)
+	assert.NotContains(t, res, testRecords["potato1"])
+	assert.NotContains(t, res, testRecords["www2"])
+	q = schema.QueryLookup{
+		QType: "A",
+		QName: "www.example.com",
+	}
+	res, err = backend.Lookup(q)
+	assert.NoError(t, err)
+	assert.NotContains(t, res, testRecords["potato1"])
+	assert.Contains(t, res, testRecords["www2"])
+}

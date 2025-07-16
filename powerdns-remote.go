@@ -2,13 +2,15 @@ package main
 
 import (
 	"embed"
-	"flag"
 	"github.com/efigence/go-powerdns/backend/ipredir"
 	"github.com/efigence/go-powerdns/backend/yamldb"
 	"github.com/efigence/go-powerdns/webapi"
+	"github.com/urfave/cli"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 var version string
@@ -55,31 +57,82 @@ func init() {
 
 type Config struct {
 	ListenAddr string
-	YAMLDB     string
+	YAMLDir    string
 }
 
 func main() {
-	var cfg Config
-
-	if cfg.ListenAddr == "" {
-		cfg.ListenAddr = "127.0.0.1:63636"
+	app := cli.NewApp()
+	app.Name = "powerdns-remote"
+	app.Description = "powerdns file backend"
+	app.Version = version
+	app.HideHelp = true
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{Name: "help, h", Usage: "show help"},
+		cli.StringFlag{
+			Name:  "listen-addr",
+			Value: "127.0.0.1:63636",
+			Usage: "HTTP API listen address",
+		},
+		cli.StringFlag{
+			Name:     "yaml-dir",
+			Usage:    "path to dir of DNS yamls",
+			Required: true,
+		},
 	}
-	flag.Set("bind", cfg.ListenAddr)
-	log.Info("Starting app")
-	log.Debug("version: %s", version)
-	m, _ := yamldb.New()
-	log.Info("loading yaml %s", m.LoadFile("t-data/dns.yaml"))
-	r, _ := ipredir.New(m)
-	w, err := webapi.New(webapi.Config{
-		Logger:       log.Named("web"),
-		AccessLogger: log.Named("access"),
-		ListenAddr:   cfg.ListenAddr,
-		DNSBackend:   m,
-		RedirBackend: r,
-	}, embeddedWebContent)
+	app.Action = func(c *cli.Context) error {
+		cfg := Config{
+			ListenAddr: c.String("listen-addr"),
+			YAMLDir:    c.String("yaml-dir"),
+		}
+		if c.Bool("help") {
+			cli.ShowAppHelp(c)
+			os.Exit(1)
+		}
 
-	if err != nil {
-		log.Fatalf("error setting up: %s", err)
+		log.Infof("Starting %s version: %s", app.Name, version)
+		m, _ := yamldb.New()
+		err := m.LoadDir(cfg.YAMLDir)
+		if err != nil {
+			log.Errorf("%s", err)
+			os.Exit(1)
+		}
+		log.Info("loaded YAML from %s", cfg.YAMLDir)
+		r, _ := ipredir.New(m)
+
+		signalChannel := make(chan os.Signal, 2)
+		signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM, syscall.SIGUSR1)
+		go func() {
+			for sig := range signalChannel {
+				switch sig {
+				case os.Interrupt:
+					log.Infof("got interrupt, exiting")
+					os.Exit(0)
+				case syscall.SIGTERM:
+					log.Infof("got SIGTERM, exiting")
+					os.Exit(0)
+				case syscall.SIGUSR1:
+					log.Info("reloading records from file")
+					err := m.UpdateDir(cfg.YAMLDir)
+					if err != nil {
+						log.Errorf("error reloading %s: %s", cfg.YAMLDir, err)
+					}
+				}
+			}
+		}()
+
+		w, err := webapi.New(webapi.Config{
+			Logger:       log.Named("web"),
+			AccessLogger: log.Named("access"),
+			ListenAddr:   cfg.ListenAddr,
+			DNSBackend:   m,
+			RedirBackend: r,
+		}, embeddedWebContent)
+
+		if err != nil {
+			log.Fatalf("error setting up: %s", err)
+		}
+		log.Fatalf("error starting up: %s", w.Run())
+		return nil
 	}
-	log.Fatalf("error starting up: %s", w.Run())
+	app.Run(os.Args)
 }

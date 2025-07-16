@@ -73,7 +73,11 @@ func (db *YAMLDB) LoadDir(dir string) error {
 			return nil
 		}
 		filecount++
-		return db.LoadFile(path)
+		er := db.LoadFile(path)
+		if er != nil {
+			return fmt.Errorf("error while parsing %s: %s", path, er)
+		}
+		return er
 	})
 	if err != nil {
 		return err
@@ -95,7 +99,6 @@ func (db *YAMLDB) UpdateDir(dir string) error {
 	// PITA to use that we will just hope golang devs wont fuck up implicit atomic pointer writes
 	db.db = n.db
 	return err
-
 }
 
 func (db *YAMLDB) Lookup(q schema.QueryLookup) ([]schema.DNSRecord, error) {

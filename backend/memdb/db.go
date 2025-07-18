@@ -19,6 +19,7 @@ type MemDomains struct {
 	DomainRecords    map[string]map[string][]schema.DNSRecord
 	Domains          map[string]schema.DNSDomain
 	PerDomainRecords map[string][]schema.DNSRecord
+	SerialBase       uint32
 }
 
 func (d *MemDomains) GetRootDomainFor(dom string) (root string, err error) {
@@ -63,6 +64,7 @@ func (d *MemDomains) AddDomain(domain schema.DNSDomain) error {
 	if domain.Nxdomain == 0 {
 		domain.Nxdomain = 60 * 30
 	}
+	domain.Serial = d.SerialBase
 	if len(domain.NS) < 1 {
 		return fmt.Errorf("domain needs at least one NS")
 	}

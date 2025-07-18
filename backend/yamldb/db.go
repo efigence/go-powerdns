@@ -6,10 +6,16 @@ import (
 	"github.com/efigence/go-powerdns/backend/yamlloader"
 	"github.com/efigence/go-powerdns/schema"
 	"io/fs"
+	"math"
+	"math/rand/v2"
+
 	"path/filepath"
 	"strings"
 	"time"
 )
+
+var serialShardsInterval = 864000
+var serialShards = math.MaxUint32 / serialShardsInterval
 
 type YAMLDB struct {
 	db *memdb.MemDomains
@@ -18,7 +24,17 @@ type YAMLDB struct {
 func New() (*YAMLDB, error) {
 	backend := YAMLDB{}
 	backend.db = memdb.New()
+	backend.regenSerial()
 	return &backend, nil
+}
+
+func (db *YAMLDB) regenSerial() {
+	if db.db.SerialBase == 0 {
+		db.db.SerialBase = uint32(rand.N(serialShards) * serialShardsInterval)
+	} else {
+		db.db.SerialBase++
+	}
+
 }
 func (db *YAMLDB) LoadFile(file string) error {
 	data, err := yamlloader.Load(file)
@@ -97,12 +113,15 @@ func (db *YAMLDB) LoadDir(dir string) error {
 
 func (db *YAMLDB) UpdateDir(dir string) error {
 	n, _ := New()
+	db.regenSerial()
+	n.db.SerialBase = db.db.SerialBase
 	err := n.LoadDir(dir)
 	if err != nil {
 		return err
 	}
 	// this is technically wrong, atomic.Pointer should be used but it's such
 	// PITA to use that we will just hope golang devs wont fuck up implicit atomic pointer writes
+
 	db.db = n.db
 	return err
 }

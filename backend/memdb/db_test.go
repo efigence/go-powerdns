@@ -167,7 +167,7 @@ func TestRecordLookupAny(t *testing.T) {
 	assert.Equal(t, correctOutput, res)
 }
 
-func BenchmarkMemDomains_Lookup(b *testing.B) {
+func BenchmarkRecordLookup(b *testing.B) {
 	backend := New()
 	backend.AddDomain(schema.DNSDomain{
 		Name: "example.com",

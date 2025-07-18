@@ -36,7 +36,8 @@ func (api Api) Parse(raw string) (schema.QueryResponse, error) {
 		var n schema.QueryResponse
 		return n, err
 	}
-	switch string(objmap[`method`]) {
+	method := strings.ToLower(string(objmap[`method`]))
+	switch method {
 	case `"initialize"`:
 		return schema.ResponseOk(), err
 	case `"lookup"`:
@@ -50,7 +51,7 @@ func (api Api) Parse(raw string) (schema.QueryResponse, error) {
 		resp, err := api.dns.Lookup(query)
 		return schema.QueryResponse{Result: resp}, err
 	// no such thing as disabled records in our backends so list and APILookup are functionally same
-	case `"list"`, `"APILookup"`:
+	case `"list"`, `"apilookup"`:
 		var query schema.QueryList
 		err := json.Unmarshal(objmap[`parameters`], &query)
 		if err != nil {
@@ -60,17 +61,19 @@ func (api Api) Parse(raw string) (schema.QueryResponse, error) {
 		strings.TrimRight(query.ZoneName, ".")
 		resp, err := api.dns.List(query)
 		return recordToResponse(resp, err)
-	case `getUpdatedMaster`:
+	case `"getupdatedmaster"`:
 		return schema.ResponseFailed("method %s not implemented, use native zone", string(objmap["method"])), nil
-	case `getAllDomainMetadata`: // no metadata support yet so we only need to respond with empty successful request
-		return schema.ResponseOk(), nil
-	case `"getAllDomains"`:
+	case `"getalldomainmetadata"`: // no metadata support yet so we only need to respond with empty successful request
+		resp := schema.ResponseOk()
+		resp.Result = map[string]string{}
+		return resp, nil
+	case `"getalldomains"`:
 		domains, err := api.dns.ListDomains(false)
 		pdnsDomains := schema.NewPDNSDomainList(domains)
 		return domainToResponse(pdnsDomains, err)
 	default:
-		api.l.Warnf("unimplemented %s %s", objmap[`method`], string(objmap[`parameters`]))
-		return schema.ResponseFailed("method %s not implemented", string(objmap["method"])), fmt.Errorf("unimplemented")
+		api.l.Warnf("unimplemented %s %s", method, string(objmap[`parameters`]))
+		return schema.ResponseFailed("method %s not implemented", method), fmt.Errorf("unimplemented")
 	}
 }
 

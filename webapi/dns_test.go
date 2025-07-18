@@ -112,3 +112,38 @@ func BenchmarkWebBackend_Dns(t *testing.B) {
 		router.r.ServeHTTP(w, req)
 	}
 }
+func TestDomainMetadata(t *testing.T) {
+	backend := memdb.New()
+	router, err := New(Config{
+		Logger:       zaptest.NewLogger(t).Sugar(),
+		AccessLogger: zaptest.NewLogger(t).Sugar(),
+		ListenAddr:   "0.0.0.0:12345",
+		DNSBackend:   backend,
+	}, testFS)
+	require.NoError(t, err)
+	backend.AddDomain(schema.DNSDomain{
+		Name: "example.com",
+		NS:   []string{"ns1.example.com"},
+	})
+	backend.AddRecord(schema.DNSRecord{
+		QType:   "A",
+		QName:   "example.com",
+		Content: "1.2.3.4",
+		Ttl:     61,
+	})
+	//
+	w := httptest.NewRecorder()
+	b := bytes.Buffer{}
+	b.WriteString(`{"method":"getalldomainmetadata", "parameters":{"name":"example.com"}}`)
+	req, _ := http.NewRequest(
+		"POST",
+		"/dns",
+		&b,
+	)
+
+	router.r.ServeHTTP(w, req)
+	//
+	assert.Equal(t, 200, w.Code)
+	assert.Contains(t, w.Body.String(), `"result":{}`)
+
+}

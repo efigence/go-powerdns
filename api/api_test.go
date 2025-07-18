@@ -6,6 +6,7 @@ import (
 	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
+	"regexp"
 	"testing"
 	//	"reflect"
 	"fmt"
@@ -14,10 +15,14 @@ import (
 var testStrings []string
 
 var queries = map[string]string{
-	"lookup":     `{"method":"lookup", "parameters":{"qtype":"ANY", "qname":"www.example.com", "remote":"192.0.2.24", "local":"192.0.2.1", "real-remote":"192.0.2.2", "zone-id":-1}}`,
-	"list":       `{"method":"list", "parameters":{"zonename":"example.com","domain_id":-1}}`,
-	"initialize": `{"method":"initialize", "parameters":{"command":"/path/to/something", "timeout":"2000", "something":"else"}}`,
-	"badreq":     `{"asd":123}`,
+	"lookup":               `{"method":"lookup", "parameters":{"qtype":"ANY", "qname":"www.example.com", "remote":"192.0.2.24", "local":"192.0.2.1", "real-remote":"192.0.2.2", "zone-id":-1}}`,
+	"list":                 `{"method":"list", "parameters":{"zonename":"example.com","domain_id":-1}}`,
+	"initialize":           `{"method":"initialize", "parameters":{"command":"/path/to/something", "timeout":"2000", "something":"else"}}`,
+	"getAllDomains":        `{"method": "getAllDomains", "parameters": {"include_disabled": true}}`,
+	"getAllDomainMetadata": `{"method":"getalldomainmetadata", "parameters":{"name":"example.com"}}`,
+	"badreq":               `{"asd":123}`,
+	"getUpdatedMaster": `{"method": "getUpdatedMasters", "parameters": {}}
+`,
 }
 
 func testQBackend() schema.DomainReader {
@@ -56,6 +61,7 @@ func testQBackend() schema.DomainReader {
 
 var qLookup = testQLookup{}
 var qList = testQList{}
+var qDomain = testQDomain{}
 
 func TestQuery(t *testing.T) {
 	fmt.Printf("")
@@ -84,9 +90,38 @@ func TestQuery(t *testing.T) {
 		assert.Equal(t, string(testj), string(outj))
 
 	})
+	t.Run("domainList", func(t *testing.T) {
+		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
+		out, err := api.Parse(queries["getAllDomains"])
+		testQueryOutput, _ := qDomain.ListDomains(schema.QueryLookup{})
+		assert.NoError(t, err)
+		outj, _ := json.MarshalIndent(out, "", " ")
+		testj, _ := json.MarshalIndent(testQueryOutput, "", " ")
+		re := regexp.MustCompile(`(?m)^.*last_check.*\n?`)
+		outjs := re.ReplaceAllString(string(outj), "")
+		testjs := re.ReplaceAllString(string(testj), "")
+		assert.Equal(t, testjs, outjs)
+	})
+	t.Run("domainMetadata", func(t *testing.T) {
+		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
+		out, err := api.Parse(queries["getAllDomainMetadata"])
+		testQueryOutput := schema.QueryResponse{
+			Result: map[string]string{},
+		}
+		assert.NoError(t, err)
+		outj, _ := json.MarshalIndent(out, "", " ")
+		testj, _ := json.MarshalIndent(testQueryOutput, "", " ")
+		assert.Equal(t, string(testj), string(outj))
+	})
 	t.Run("BadReq", func(t *testing.T) {
 		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
 		out, err := api.Parse(queries["badreq"])
+		assert.Error(t, err)
+		assert.Equal(t, schema.ResponseFailed(), out)
+	})
+	t.Run("GetUpdatedMaster", func(t *testing.T) {
+		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
+		out, err := api.Parse(queries["getUpdatedMaster"])
 		assert.Error(t, err)
 		assert.Equal(t, schema.ResponseFailed(), out)
 	})
@@ -145,5 +180,24 @@ func (testQList) List(q schema.QueryList) (schema.QueryResponse, error) {
 			Ttl:     60,
 		},
 	}
+	return res, err
+}
+
+type testQDomain struct{}
+
+func (testQDomain) ListDomains(q schema.QueryLookup) (schema.QueryResponse, error) {
+	var err error
+	res := schema.NewResponse()
+	res.Result = []schema.PDNSDomain{{
+		ID:   0,
+		Zone: "example.com.",
+		Kind: "native",
+	}}
+	return res, err
+}
+func (testQDomain) ListDomainMetadata(q schema.QueryLookup) (schema.QueryResponse, error) {
+	var err error
+	res := schema.NewResponse()
+	res.Result = map[string]string{}
 	return res, err
 }

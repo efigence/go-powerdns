@@ -218,7 +218,6 @@ func BenchmarkRecordLookup(b *testing.B) {
 			backend.Lookup(q)
 		}
 	})
-	b.SkipNow()
 }
 
 func TestMemDomains_GetRootDomainFor(t *testing.T) {

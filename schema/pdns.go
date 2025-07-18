@@ -1,5 +1,7 @@
 package schema
 
+import "time"
+
 type PDNSDomain struct {
 	ID             int      `json:"id"`
 	Zone           string   `json:"zone"`
@@ -18,12 +20,11 @@ func NewPDNSDomainList(domains []DNSDomain) []PDNSDomain {
 			ID:             i,
 			Zone:           zone,
 			Masters:        nil,
-			NotifiedSerial: 0,
-			Serial:         0,
-			LastCheck:      0,
-			Kind:           "",
+			NotifiedSerial: int(r.Serial),
+			Serial:         int(r.Serial),
+			LastCheck:      int(time.Now().Unix()),
+			Kind:           "native",
 		})
-
 	}
 	return d
 }

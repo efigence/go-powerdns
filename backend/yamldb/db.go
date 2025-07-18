@@ -45,9 +45,15 @@ func (db *YAMLDB) LoadFile(file string) error {
 				ttl = v2.TTL
 			}
 			for _, z := range v2.A {
+				var name string
+				if len(k2) == 0 {
+					name = k1
+				} else {
+					name = k2 + "." + k1
+				}
 				db.db.AddRecord(schema.DNSRecord{
 					QType:      "A",
-					QName:      k2 + "." + k1,
+					QName:      name,
 					Content:    z.String(),
 					Ttl:        int32(ttl.Seconds()),
 					DomainId:   0,

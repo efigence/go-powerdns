@@ -38,6 +38,12 @@ func TestLoad(t *testing.T) {
 						net.ParseIP("3.4.5.7"),
 					},
 				},
+				"": {
+					TTL: time.Second * 1234,
+					A: []net.IP{
+						net.ParseIP("9.9.9.9"),
+					},
+				},
 			},
 		},
 	})

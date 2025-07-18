@@ -62,6 +62,8 @@ func (api Api) Parse(raw string) (schema.QueryResponse, error) {
 		return recordToResponse(resp, err)
 	case `getUpdatedMaster`:
 		return schema.ResponseFailed("method %s not implemented, use native zone", string(objmap["method"])), nil
+	case `getAllDomainMetadata`: // no metadata support yet so we only need to respond with empty successful request
+		return schema.ResponseOk(), nil
 	case `"getAllDomains"`:
 		domains, err := api.dns.ListDomains(false)
 		pdnsDomains := schema.NewPDNSDomainList(domains)

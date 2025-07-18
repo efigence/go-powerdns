@@ -17,7 +17,7 @@ func (w *WebBackend) Dns(c *gin.Context) {
 	s := buf.String()
 	resp, err := w.dnsApi.Parse(s)
 	if err != nil {
-		log.Error("failure on responding query: %+v", err)
+		log.Errorf("failure on responding query: %+v", err)
 	}
 
 	c.JSON(http.StatusOK, resp)

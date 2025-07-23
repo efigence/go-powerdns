@@ -2,21 +2,27 @@ package main
 
 import (
 	"embed"
+	"fmt"
+	"github.com/efigence/go-mon"
 	"github.com/efigence/go-powerdns/backend/ipredir"
 	"github.com/efigence/go-powerdns/backend/yamldb"
+	"github.com/efigence/go-powerdns/filewatch"
 	"github.com/efigence/go-powerdns/webapi"
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
+	"time"
 )
 
 var version string
 
 var log *zap.SugaredLogger
 var debug = true
+var reloadFlag = false
 
 //go:embed static templates
 var embeddedWebContent embed.FS
@@ -96,7 +102,7 @@ func main() {
 			log.Errorf("%s", err)
 			os.Exit(1)
 		}
-		log.Info("loaded YAML from %s", cfg.YAMLDir)
+		log.Infof("loaded YAML from %s", cfg.YAMLDir)
 		r, _ := ipredir.New(m)
 
 		signalChannel := make(chan os.Signal, 2)
@@ -127,6 +133,32 @@ func main() {
 			DNSBackend:   m,
 			RedirBackend: r,
 		}, embeddedWebContent)
+		err = filewatch.NewWatch(log.Named("fsnotify"), cfg.YAMLDir, func(name string) {
+			if strings.Contains(name, ".yaml") {
+				reloadFlag = true
+			}
+		})
+		if err != nil {
+			log.Fatalf("error starting filewatcher: %s", err)
+		}
+		go func() {
+			for {
+				time.Sleep(time.Second)
+				if reloadFlag {
+					// set it to false so if anything is changed during wait we will reload again
+					reloadFlag = false
+					time.Sleep(time.Second)
+					log.Infof("detected file change, reloading %s dir", cfg.YAMLDir)
+					err := m.UpdateDir(cfg.YAMLDir)
+					if err != nil {
+						log.Infof("error reloading: %s", err)
+						mon.GlobalStatus.Update(mon.StatusWarning, fmt.Sprintf("YAML update failed: %s", err))
+					} else {
+						mon.GlobalStatus.Update(mon.StatusOk, fmt.Sprintf("last reload: %s", time.Now().Format(time.DateTime)))
+					}
+				}
+			}
+		}()
 
 		if err != nil {
 			log.Fatalf("error setting up: %s", err)

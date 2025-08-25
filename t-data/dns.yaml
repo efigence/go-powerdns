@@ -12,6 +12,7 @@ zones:
         ns: [ ns1.example.com ]
         owner: hostmaster.example.com
         default_expiry: 86400s
+        autogenerate_ptr: true
         records:
             "*":
                 A: ['1.2.3.4']
@@ -27,4 +28,4 @@ zones:
                     - '3.4.5.7'
             "":
                 ttl: 1234s
-                A: ['9.9.9.9']
+                A: ['9.8.7.6']

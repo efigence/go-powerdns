@@ -15,7 +15,7 @@ type DNSDomain struct {
 	Retry           int32
 	Expiry          int32
 	Nxdomain        int32
-	AutogeneratePTR bool
+	AutogeneratePTR bool `yaml:"autogenerate_ptr"`
 }
 
 func (d DNSDomain) Validate() error {

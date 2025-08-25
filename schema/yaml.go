@@ -23,6 +23,6 @@ type Domain struct {
 	NS              []string      `yaml:"ns"`
 	Owner           string        `yaml:"owner"`
 	DefaultExpiry   time.Duration `yaml:"default_expiry"`
-	AutogeneratePTR bool
+	AutogeneratePTR bool          `yaml:"autogenerate_ptr"`
 	Records         map[string]Record
 }

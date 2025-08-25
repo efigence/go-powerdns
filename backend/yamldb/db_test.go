@@ -25,7 +25,7 @@ var testRecords = map[string]schema.DNSRecord{
 	"www-root": {
 		QType:   "A",
 		QName:   "example.com",
-		Content: "9.9.9.9",
+		Content: "9.8.7.6",
 		Ttl:     1234,
 	},
 	"zone": {

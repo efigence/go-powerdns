@@ -5,6 +5,7 @@ import (
 	"github.com/efigence/go-powerdns/backend/memdb"
 	"github.com/efigence/go-powerdns/backend/yamlloader"
 	"github.com/efigence/go-powerdns/schema"
+	"github.com/k0kubun/pp"
 	"io/fs"
 	"math"
 	"math/rand/v2"
@@ -36,6 +37,8 @@ func (db *YAMLDB) regenSerial() {
 	}
 
 }
+
+// TODO figure out how to handle errornous records without failing whole reload
 func (db *YAMLDB) LoadFile(file string) error {
 	data, err := yamlloader.Load(file)
 	if err != nil {
@@ -78,7 +81,23 @@ func (db *YAMLDB) LoadFile(file string) error {
 					AuthString: "",
 				})
 				if v1.AutogeneratePTR {
-					db.db.AddRecord(schema.DNSRecord{
+					if _, ok := db.db.Domains[schema.GeneratePTRDomainFromIPv4(z)]; !ok {
+						err := db.db.AddDomain(schema.DNSDomain{
+							Name:            schema.GeneratePTRDomainFromIPv4(z),
+							NS:              v1.NS,
+							Owner:           v1.Owner,
+							Serial:          uint32(time.Now().Second() / 1000),
+							Refresh:         86400,
+							Retry:           300,
+							Expiry:          864000,
+							Nxdomain:        100,
+							AutogeneratePTR: false,
+						})
+						if err != nil {
+							pp.Print(err)
+						}
+					}
+					err := db.db.AddRecord(schema.DNSRecord{
 						QType:      "PTR",
 						QName:      schema.GeneratePTRFromIPv4(z),
 						Content:    name,
@@ -87,6 +106,9 @@ func (db *YAMLDB) LoadFile(file string) error {
 						ScopeMask:  "",
 						AuthString: "",
 					})
+					if err != nil {
+						pp.Print(err)
+					}
 				}
 			}
 		}
@@ -150,4 +172,8 @@ func (db *YAMLDB) ListDomains(disabled bool) ([]schema.DNSDomain, error) {
 
 func (db *YAMLDB) GetRootDomainFor(s string) (string, error) {
 	return db.db.GetRootDomainFor(s)
+}
+
+func (db *YAMLDB) DumpAllRecords() map[string]map[string][]schema.DNSRecord {
+	return db.db.DomainRecords
 }

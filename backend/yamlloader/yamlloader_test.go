@@ -14,9 +14,10 @@ func TestLoad(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, data, map[string]schema.Domain{
 		"example.com": {
-			NS:            []string{"ns1.example.com"},
-			DefaultExpiry: time.Hour * 24,
-			Owner:         "hostmaster.example.com",
+			NS:              []string{"ns1.example.com"},
+			DefaultExpiry:   time.Hour * 24,
+			Owner:           "hostmaster.example.com",
+			AutogeneratePTR: true,
 			Records: map[string]schema.Record{
 				"*": {
 					A: []net.IP{net.ParseIP("1.2.3.4")},
@@ -41,7 +42,7 @@ func TestLoad(t *testing.T) {
 				"": {
 					TTL: time.Second * 1234,
 					A: []net.IP{
-						net.ParseIP("9.9.9.9"),
+						net.ParseIP("9.8.7.6"),
 					},
 				},
 			},

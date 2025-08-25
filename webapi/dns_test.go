@@ -3,6 +3,7 @@ package webapi
 import (
 	"bytes"
 	"github.com/efigence/go-powerdns/backend/memdb"
+	"github.com/efigence/go-powerdns/backend/yamldb"
 	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,7 +34,9 @@ func TestPingRoute(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "state")
 }
 func TestDNS(t *testing.T) {
-	backend := memdb.New()
+	backend, err := yamldb.New()
+	require.NoError(t, err)
+	require.NoError(t, backend.LoadFile("../t-data/dns.yaml"))
 	router, err := New(Config{
 		Logger:       zaptest.NewLogger(t).Sugar(),
 		AccessLogger: zaptest.NewLogger(t).Sugar(),
@@ -41,16 +44,7 @@ func TestDNS(t *testing.T) {
 		DNSBackend:   backend,
 	}, testFS)
 	require.NoError(t, err)
-	backend.AddDomain(schema.DNSDomain{
-		Name: "example.com",
-		NS:   []string{"ns1.example.com"},
-	})
-	backend.AddRecord(schema.DNSRecord{
-		QType:   "A",
-		QName:   "example.com",
-		Content: "1.2.3.4",
-		Ttl:     61,
-	})
+
 	//
 	w := httptest.NewRecorder()
 	b := bytes.Buffer{}
@@ -75,7 +69,19 @@ func TestDNS(t *testing.T) {
 	)
 	router.r.ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Code)
-	assert.Contains(t, w.Body.String(), `1.2.3.4`)
+	assert.Contains(t, w.Body.String(), `9.8.7.6`)
+	w = httptest.NewRecorder()
+	b = bytes.Buffer{}
+	b.WriteString(`{"method": "lookup", "parameters": {"local": "0.0.0.0", "qname": "6.7.8.9.in-addr.arpa.", "qtype": "PTR", "real-remote": "0.0.0.0/0", "remote": "0.0.0.0", "zone-id": 0}}`)
+	req, _ = http.NewRequest(
+		"POST",
+		"/dns",
+		&b,
+	)
+	router.r.ServeHTTP(w, req)
+	assert.Equal(t, 200, w.Code)
+	assert.Contains(t, w.Body.String(), `example.com`)
+	//pp.Print(backend.DumpAllRecords())
 }
 
 func BenchmarkWebBackend_Dns(t *testing.B) {

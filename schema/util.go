@@ -21,3 +21,8 @@ func GeneratePTRFromIPv4(ip net.IP) string {
 	octets := strings.Split(ip.String(), ".")
 	return octets[3] + "." + octets[2] + "." + octets[1] + "." + octets[0] + "." + "in-addr.arpa"
 }
+
+func GeneratePTRDomainFromIPv4(ip net.IP) string {
+	octets := strings.Split(ip.String(), ".")
+	return octets[2] + "." + octets[1] + "." + octets[0] + "." + "in-addr.arpa"
+}

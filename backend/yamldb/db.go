@@ -77,6 +77,17 @@ func (db *YAMLDB) LoadFile(file string) error {
 					ScopeMask:  "",
 					AuthString: "",
 				})
+				if v1.AutogeneratePTR {
+					db.db.AddRecord(schema.DNSRecord{
+						QType:      "PTR",
+						QName:      schema.GeneratePTRFromIPv4(z),
+						Content:    name,
+						Ttl:        int32(ttl.Seconds()),
+						DomainId:   0,
+						ScopeMask:  "",
+						AuthString: "",
+					})
+				}
 			}
 		}
 	}

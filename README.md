@@ -14,7 +14,7 @@ records:
     example.com
     ns: [ns1.example.com]
     owner: hostmaster.efigence.com
-    expiry: 36000s # default expiry for new records
+    default_expiry: 36000s # default expiry for new records
     autogenerate_ptr: true # use this domain to populate PTR records
     records:
         "*":

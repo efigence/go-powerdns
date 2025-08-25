@@ -76,18 +76,6 @@ func GenerateSoaFromDomain(d DNSDomain) DNSRecord {
 	return rec
 }
 
-// generate array of domains from subdomain, specific -> generic
-func ExpandDNSName(name string) ([]string, error) {
-	var s []string
-	var err error
-
-	parts := strings.Split(name, `.`)
-	for i := 0; i < len(parts); i++ {
-		s = append(s, strings.Join(parts[i:], `.`))
-	}
-	return s, err
-}
-
 type NXDomain struct{ Domain string }
 
 func (n *NXDomain) Error() string {

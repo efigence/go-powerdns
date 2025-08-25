@@ -20,8 +20,9 @@ type Record struct {
 	Extra map[string]string `yaml:"extra"`
 }
 type Domain struct {
-	NS      []string      `yaml:"ns"`
-	Owner   string        `yaml:"owner"`
-	Expiry  time.Duration `yaml:"expiry"`
-	Records map[string]Record
+	NS              []string      `yaml:"ns"`
+	Owner           string        `yaml:"owner"`
+	DefaultExpiry   time.Duration `yaml:"default_expiry"`
+	AutogeneratePTR bool
+	Records         map[string]Record
 }

@@ -43,20 +43,21 @@ func (db *YAMLDB) LoadFile(file string) error {
 	}
 	for k1, v1 := range data {
 		err := db.db.AddDomain(schema.DNSDomain{
-			Name:     k1,
-			NS:       v1.NS,
-			Owner:    v1.Owner,
-			Serial:   uint32(time.Now().Second() / 1000),
-			Refresh:  86400,
-			Retry:    300,
-			Expiry:   864000,
-			Nxdomain: 100,
+			Name:            k1,
+			NS:              v1.NS,
+			Owner:           v1.Owner,
+			Serial:          uint32(time.Now().Second() / 1000),
+			Refresh:         86400,
+			Retry:           300,
+			Expiry:          864000,
+			Nxdomain:        100,
+			AutogeneratePTR: v1.AutogeneratePTR,
 		})
 		if err != nil {
 			return err
 		}
 		for k2, v2 := range v1.Records {
-			ttl := v1.Expiry
+			ttl := v1.DefaultExpiry
 			if v2.TTL.Seconds() > 0 {
 				ttl = v2.TTL
 			}

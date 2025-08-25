@@ -10,11 +10,12 @@ type DNSDomain struct {
 	NS    []string
 	Owner string
 	// Assuming they are same data type as TTL, RFC doesnt say if those are unsigned or not
-	Serial   uint32
-	Refresh  int32
-	Retry    int32
-	Expiry   int32
-	Nxdomain int32
+	Serial          uint32
+	Refresh         int32
+	Retry           int32
+	Expiry          int32
+	Nxdomain        int32
+	AutogeneratePTR bool
 }
 
 func (d DNSDomain) Validate() error {

@@ -35,7 +35,6 @@ func NewWatch(log *zap.SugaredLogger, dir string, notifyFunc func(path string)) 
 
 						}
 					}
-
 				}
 				if event.Has(fsnotify.Remove) {
 					// I think its automatically removed but still we need message for it

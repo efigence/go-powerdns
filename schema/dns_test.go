@@ -3,6 +3,7 @@ package schema
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestExpandDNSName(t *testing.T) {
@@ -44,6 +45,7 @@ func TestSoaFromDomain(t *testing.T) {
 
 func BenchmarkExpandDNSName(b *testing.B) {
 	for i := 0; i < b.N; i++ {
+		time.Sleep(time.Millisecond * 40)
 		_, _ = ExpandDNSName(`some.simple.dns.name`)
 	}
 }

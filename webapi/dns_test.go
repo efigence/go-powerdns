@@ -34,7 +34,7 @@ func TestPingRoute(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "state")
 }
 func TestDNS(t *testing.T) {
-	backend, err := yamldb.New()
+	backend, err := yamldb.New(zaptest.NewLogger(t).Sugar())
 	require.NoError(t, err)
 	require.NoError(t, backend.LoadFile("../t-data/dns.yaml"))
 	router, err := New(Config{
@@ -85,7 +85,7 @@ func TestDNS(t *testing.T) {
 }
 
 func BenchmarkWebBackend_Dns(t *testing.B) {
-	backend := memdb.New()
+	backend := memdb.New(zaptest.NewLogger(t).Sugar())
 	router, err := New(Config{
 		Logger:       zaptest.NewLogger(t, zaptest.Level(zap.WarnLevel)).Sugar(),
 		AccessLogger: zaptest.NewLogger(t, zaptest.Level(zap.WarnLevel)).Sugar(),
@@ -119,7 +119,7 @@ func BenchmarkWebBackend_Dns(t *testing.B) {
 	}
 }
 func TestDomainMetadata(t *testing.T) {
-	backend := memdb.New()
+	backend := memdb.New(zaptest.NewLogger(t).Sugar())
 	router, err := New(Config{
 		Logger:       zaptest.NewLogger(t).Sugar(),
 		AccessLogger: zaptest.NewLogger(t).Sugar(),

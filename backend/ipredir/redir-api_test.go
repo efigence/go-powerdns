@@ -4,12 +4,12 @@ import (
 	"github.com/efigence/go-powerdns/backend/memdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 	"testing"
 )
 
-var backend, _ = New(memdb.New())
-
 func TestAdd(t *testing.T) {
+	var backend, _ = New(memdb.New(zaptest.NewLogger(t).Sugar()))
 	t.Run("Add IP redir", func(t *testing.T) {
 		err := backend.AddRedirIp("1.2.3.4", "5.6.7.8")
 		require.NoError(t, err)

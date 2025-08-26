@@ -4,6 +4,7 @@ import (
 	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 	"slices"
 	"testing"
 )
@@ -55,7 +56,7 @@ var cmpFunc = func(a, b schema.DNSRecord) int {
 }
 
 func TestMemDomains_AddDomain(t *testing.T) {
-	backend := New()
+	backend := New(zaptest.NewLogger(t).Sugar())
 	require.NoError(t, backend.AddDomain(schema.DNSDomain{
 		Name: "www.example2.com",
 		NS:   []string{"ns1.example.com"},
@@ -72,7 +73,7 @@ func TestMemDomains_AddDomain(t *testing.T) {
 }
 
 func TestRecordInsert(t *testing.T) {
-	backend := New()
+	backend := New(zaptest.NewLogger(t).Sugar())
 	require.NoError(t, backend.AddDomain(schema.DNSDomain{
 		Name: "example.com",
 		NS:   []string{"ns1.example.com"},
@@ -94,7 +95,7 @@ func TestRecordInsert(t *testing.T) {
 }
 
 func TestRecordLookup(t *testing.T) {
-	backend := New()
+	backend := New(zaptest.NewLogger(t).Sugar())
 	require.NoError(t, backend.AddDomain(schema.DNSDomain{
 		Name: "example.com",
 		NS:   []string{"ns1.example.com"},
@@ -143,7 +144,7 @@ func TestRecordLookup(t *testing.T) {
 }
 
 func TestRecordLookupAny(t *testing.T) {
-	backend := New()
+	backend := New(zaptest.NewLogger(t).Sugar())
 	require.NoError(t, backend.AddDomain(schema.DNSDomain{
 		Name: "example.com",
 		NS:   []string{"ns1.example.com"},
@@ -168,7 +169,7 @@ func TestRecordLookupAny(t *testing.T) {
 }
 
 func BenchmarkRecordLookup(b *testing.B) {
-	backend := New()
+	backend := New(zaptest.NewLogger(b).Sugar())
 	backend.AddDomain(schema.DNSDomain{
 		Name: "example.com",
 		NS:   []string{"ns1.example.com"},
@@ -221,7 +222,7 @@ func BenchmarkRecordLookup(b *testing.B) {
 }
 
 func TestMemDomains_GetRootDomainFor(t *testing.T) {
-	backend := New()
+	backend := New(zaptest.NewLogger(t).Sugar())
 	require.NoError(t, backend.AddDomain(schema.DNSDomain{
 		Name: "example.com",
 		NS:   []string{"ns1.example.com"},

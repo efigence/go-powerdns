@@ -5,6 +5,7 @@ import (
 	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 	"slices"
 	"testing"
 )
@@ -56,7 +57,7 @@ var cmpFunc = func(a, b schema.DNSRecord) int {
 }
 
 func TestRecordInsert(t *testing.T) {
-	mdb := memdb.New()
+	mdb := memdb.New(zaptest.NewLogger(t).Sugar())
 	backend, err := New(mdb)
 	require.NoError(t, err)
 	mdb.AddDomain(schema.DNSDomain{
@@ -79,7 +80,7 @@ func TestRecordInsert(t *testing.T) {
 }
 
 func TestRecordLookup(t *testing.T) {
-	backend, err := New(memdb.New())
+	backend, err := New(memdb.New(zaptest.NewLogger(t).Sugar()))
 	require.NoError(t, err)
 	assert.NoError(t, backend.AddRecord(testRecords["wildcard"]))
 	assert.NoError(t, backend.AddRecord(testRecords["www"]))
@@ -102,7 +103,7 @@ func TestRecordLookup(t *testing.T) {
 }
 
 func BenchmarkRecordLookup(b *testing.B) {
-	backend, _ := New(memdb.New())
+	backend, _ := New(memdb.New(zaptest.NewLogger(b).Sugar()))
 	backend.AddRecord(testRecords["wildcard"])
 	backend.AddRecord(testRecords["www"])
 	backend.AddRecord(testRecords["www2"])
@@ -120,7 +121,7 @@ func BenchmarkRecordLookup(b *testing.B) {
 }
 
 func TestRedir(t *testing.T) {
-	backend, _ := New(memdb.New())
+	backend, _ := New(memdb.New(zaptest.NewLogger(t).Sugar()))
 	backend.AddRedirIp("127.0.0.1", "127.0.0.2")
 
 	t.Run("Adding IP", func(t *testing.T) {

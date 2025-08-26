@@ -96,7 +96,7 @@ func main() {
 		}
 
 		log.Infof("Starting %s version: %s", app.Name, version)
-		m, _ := yamldb.New()
+		m, _ := yamldb.New(log.Named("yamldb"))
 		err := m.LoadDir(cfg.YAMLDir)
 		if err != nil {
 			log.Errorf("%s", err)

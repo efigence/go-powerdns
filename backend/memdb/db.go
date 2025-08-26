@@ -3,15 +3,17 @@ package memdb
 import (
 	"fmt"
 	"github.com/efigence/go-powerdns/schema"
+	"go.uber.org/zap"
 	"strings"
 	//	"gopkg.in/mem.v2"
 )
 
-func New() *MemDomains {
+func New(log *zap.SugaredLogger) *MemDomains {
 	var v MemDomains
 	v.DomainRecords = make(map[string]map[string][]schema.DNSRecord)
 	v.Domains = make(map[string]schema.DNSDomain)
 	v.PerDomainRecords = map[string][]schema.DNSRecord{}
+	v.l = log
 	return &v
 }
 
@@ -20,6 +22,7 @@ type MemDomains struct {
 	Domains          map[string]schema.DNSDomain
 	PerDomainRecords map[string][]schema.DNSRecord
 	SerialBase       uint32
+	l                *zap.SugaredLogger
 }
 
 func (d *MemDomains) GetRootDomainFor(dom string) (root string, err error) {
@@ -82,6 +85,12 @@ func (d *MemDomains) AddRecord(record schema.DNSRecord) error {
 	}
 	if d.DomainRecords[record.QName] == nil {
 		d.DomainRecords[record.QName] = make(map[string][]schema.DNSRecord)
+	}
+	if record.QType == "PTR" {
+		if len(d.DomainRecords[record.QName][record.QType]) == 0 {
+			d.DomainRecords[record.QName][record.QType] = append(d.DomainRecords[record.QName][record.QType], record)
+		} else {
+		}
 	}
 	d.DomainRecords[record.QName][record.QType] = append(d.DomainRecords[record.QName][record.QType], record)
 	if _, ok := d.PerDomainRecords[domName]; !ok {

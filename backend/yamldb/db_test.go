@@ -4,6 +4,7 @@ import (
 	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 	"testing"
 )
 
@@ -49,7 +50,7 @@ var testRecords = map[string]schema.DNSRecord{
 }
 
 func TestRecordList(t *testing.T) {
-	backend, _ := New()
+	backend, _ := New(zaptest.NewLogger(t).Sugar())
 	require.NoError(t, backend.LoadFile("../../t-data/dns.yaml"))
 	t.Run("www", func(t *testing.T) {
 		q := schema.QueryLookup{
@@ -83,18 +84,18 @@ func TestRecordList(t *testing.T) {
 
 func TestYAMLDB_LoadDir(t *testing.T) {
 	t.Run("No dup domains", func(t *testing.T) {
-		backend, _ := New()
+		backend, _ := New(zaptest.NewLogger(t).Sugar())
 		require.Error(t, backend.LoadDir("../../t-data/dupdomain"))
 
 	})
 	t.Run("No yaml dir fail", func(t *testing.T) {
-		backend, _ := New()
+		backend, _ := New(zaptest.NewLogger(t).Sugar())
 		require.Error(t, backend.LoadDir("."))
 
 	})
 	t.Run("load subdirectory", func(t *testing.T) {
 
-		backend, _ := New()
+		backend, _ := New(zaptest.NewLogger(t).Sugar())
 
 		require.NoError(t, backend.LoadDir("../../t-data/dns"))
 		q := schema.QueryLookup{
@@ -120,7 +121,7 @@ func TestYAMLDB_LoadDir(t *testing.T) {
 	})
 }
 func TestYAMLDB_UpdateDir(t *testing.T) {
-	backend, _ := New()
+	backend, _ := New(zaptest.NewLogger(t).Sugar())
 	require.NoError(t, backend.LoadDir("../../t-data/dns/subdir/potato.yaml"))
 	q := schema.QueryLookup{
 		QType: "A",

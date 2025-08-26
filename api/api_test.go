@@ -5,6 +5,7 @@ import (
 	"github.com/efigence/go-powerdns/backend/memdb"
 	"github.com/efigence/go-powerdns/schema"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 	"regexp"
 	"testing"
@@ -25,8 +26,8 @@ var queries = map[string]string{
 `,
 }
 
-func testQBackend() schema.DomainReader {
-	m := memdb.New()
+func testQBackend(log *zap.SugaredLogger) schema.DomainReader {
+	m := memdb.New(log)
 	m.AddDomain(schema.DNSDomain{
 		Name: "example.com",
 		NS:   []string{"ns1.example.com"},
@@ -66,13 +67,13 @@ var qDomain = testQDomain{}
 func TestQuery(t *testing.T) {
 	fmt.Printf("")
 	t.Run("Init", func(t *testing.T) {
-		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
+		api, _ := New(testQBackend(zaptest.NewLogger(t).Sugar()), zaptest.NewLogger(t).Sugar())
 		out, err := api.Parse(queries["initialize"])
 		assert.NoError(t, err)
 		assert.Equal(t, out, schema.ResponseOk())
 	})
 	t.Run("Lookup", func(t *testing.T) {
-		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
+		api, _ := New(testQBackend(zaptest.NewLogger(t).Sugar()), zaptest.NewLogger(t).Sugar())
 		out, err := api.Parse(queries["lookup"])
 		testQueryOutput, _ := qLookup.Lookup(schema.QueryLookup{})
 		assert.NoError(t, err)
@@ -81,7 +82,7 @@ func TestQuery(t *testing.T) {
 		assert.Equal(t, string(testj), string(outj))
 	})
 	t.Run("List", func(t *testing.T) {
-		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
+		api, _ := New(testQBackend(zaptest.NewLogger(t).Sugar()), zaptest.NewLogger(t).Sugar())
 		out, err := api.Parse(queries["list"])
 		testQueryOutput, _ := qList.List(schema.QueryList{})
 		assert.NoError(t, err)
@@ -91,7 +92,7 @@ func TestQuery(t *testing.T) {
 
 	})
 	t.Run("domainList", func(t *testing.T) {
-		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
+		api, _ := New(testQBackend(zaptest.NewLogger(t).Sugar()), zaptest.NewLogger(t).Sugar())
 		out, err := api.Parse(queries["getAllDomains"])
 		testQueryOutput, _ := qDomain.ListDomains(schema.QueryLookup{})
 		assert.NoError(t, err)
@@ -103,7 +104,7 @@ func TestQuery(t *testing.T) {
 		assert.Equal(t, testjs, outjs)
 	})
 	t.Run("domainMetadata", func(t *testing.T) {
-		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
+		api, _ := New(testQBackend(zaptest.NewLogger(t).Sugar()), zaptest.NewLogger(t).Sugar())
 		out, err := api.Parse(queries["getAllDomainMetadata"])
 		testQueryOutput := schema.QueryResponse{
 			Result: map[string]string{},
@@ -114,13 +115,13 @@ func TestQuery(t *testing.T) {
 		assert.Equal(t, string(testj), string(outj))
 	})
 	t.Run("BadReq", func(t *testing.T) {
-		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
+		api, _ := New(testQBackend(zaptest.NewLogger(t).Sugar()), zaptest.NewLogger(t).Sugar())
 		out, err := api.Parse(queries["badreq"])
 		assert.Error(t, err)
 		assert.Equal(t, schema.ResponseFailed(), out)
 	})
 	t.Run("GetUpdatedMaster", func(t *testing.T) {
-		api, _ := New(testQBackend(), zaptest.NewLogger(t).Sugar())
+		api, _ := New(testQBackend(zaptest.NewLogger(t).Sugar()), zaptest.NewLogger(t).Sugar())
 		out, err := api.Parse(queries["getUpdatedMaster"])
 		assert.Error(t, err)
 		assert.Equal(t, schema.ResponseFailed(), out)

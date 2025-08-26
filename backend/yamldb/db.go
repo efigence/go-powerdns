@@ -6,6 +6,7 @@ import (
 	"github.com/efigence/go-powerdns/backend/yamlloader"
 	"github.com/efigence/go-powerdns/schema"
 	"github.com/k0kubun/pp"
+	"go.uber.org/zap"
 	"io/fs"
 	"math"
 	"math/rand/v2"
@@ -20,11 +21,13 @@ var serialShards = math.MaxUint32 / serialShardsInterval
 
 type YAMLDB struct {
 	db *memdb.MemDomains
+	l  *zap.SugaredLogger
 }
 
-func New() (*YAMLDB, error) {
+func New(log *zap.SugaredLogger) (*YAMLDB, error) {
 	backend := YAMLDB{}
-	backend.db = memdb.New()
+	backend.l = log
+	backend.db = memdb.New(log.Named("memdb"))
 	backend.regenSerial()
 	return &backend, nil
 }
@@ -146,7 +149,7 @@ func (db *YAMLDB) LoadDir(dir string) error {
 }
 
 func (db *YAMLDB) UpdateDir(dir string) error {
-	n, _ := New()
+	n, _ := New(db.l)
 	db.regenSerial()
 	n.db.SerialBase = db.db.SerialBase
 	err := n.LoadDir(dir)
